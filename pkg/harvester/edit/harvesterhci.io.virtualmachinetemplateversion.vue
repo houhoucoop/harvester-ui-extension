@@ -434,7 +434,7 @@ export default {
         <div class="spacer"></div>
         <Checkbox
           v-if="value.cpuPinningFeatureEnabled"
-          v-model="cpuPinning"
+          v-model:value="cpuPinning"
           class="check"
           type="checkbox"
           tooltip-key="harvester.virtualMachine.cpuPinning.tooltip"

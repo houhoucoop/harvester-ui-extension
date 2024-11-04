@@ -210,6 +210,10 @@ export default class HciVmTemplateVersion extends HarvesterResource {
     await templateResource.save();
   }
 
+  get cpuPinningFeatureEnabled() {
+    return this.$rootGetters['harvester-common/getFeatureEnabled']('cpuPinning');
+  }
+
   get defaultVersion() {
     const templates = this.$rootGetters['harvester/all'](HCI.VM_TEMPLATE);
     const template = templates.find((T) => this.templateId === T.id);
