@@ -1,6 +1,4 @@
 import HarvesterResource from './harvester';
-import { get } from '@shell/utils/object';
-import { findBy } from '@shell/utils/array';
 import { colorForState, stateDisplay, STATES } from '@shell/plugins/dashboard-store/resource-class';
 import { _CREATE } from '@shell/config/query-params';
 import { ucFirst, escapeHtml } from '@shell/utils/string';
@@ -67,14 +65,7 @@ export default class ScheduleVmBackup extends HarvesterResource {
   }
 
   get state() {
-    const conditions = get(this, 'status.conditions');
-    const isSuspended = findBy(conditions, 'type', 'BackupSuspend')?.status === 'True';
-
-    if (isSuspended) {
-      return STATES.suspended.label;
-    }
-
-    return this.metadata.state.name;
+    return this.status?.suspended === true ? STATES.suspended.label : STATES.active.label;
   }
 
   get stateDescription() {
