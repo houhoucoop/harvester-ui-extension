@@ -742,6 +742,9 @@ harvester:
     terminationGracePeriodSeconds:
       label: Termination Grace Period
     affinity:
+      addLabel: Add Workload Selector
+      topologyKey:
+        placeholder: 'topology.kubernetes.io/zone'
       thisPodNamespace: This virtual machine's namespace
       matchExpressions:
         inNamespaces: "Workloads in these namespaces"
@@ -1493,18 +1496,6 @@ harvester:
         label: Event
       pollingInterval:
         label: Polling Interval
-
-  affinity:
-    thisPodNamespace: This virtual machine's namespace
-    matchExpressions:
-      inNamespaces: "Workloads in these namespaces"
-    vmAffinityTitle: Virtual Machine Scheduling
-    namespaces:
-      placeholder: e.g. default,system,base
-      label: Namespaces
-    addLabel: Add Workload Selector
-    topologyKey:
-      placeholder: 'topology.kubernetes.io/zone'
 
 advancedSettings:
   experimental: 'Experimental features allow users to test and evaluate early-access functionality prior to official supported releases'
