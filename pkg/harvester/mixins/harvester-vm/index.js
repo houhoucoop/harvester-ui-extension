@@ -282,7 +282,7 @@ export default {
 
     affinityLabels() {
       return {
-        namespaceInputLabel:      this.t('harvester.virtualMachine.affinity.namespaces.label'),
+        namespaceInputLabel:      this.t('harvester.affinity.namespaces.label'),
         namespaceSelectionLabels: [
           this.t('harvester.virtualMachine.affinity.thisPodNamespace'),
           this.t('workload.scheduling.affinity.allNamespaces'),
