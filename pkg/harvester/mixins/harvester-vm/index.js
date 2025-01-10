@@ -282,14 +282,14 @@ export default {
 
     affinityLabels() {
       return {
-        namespaceInputLabel:      this.t('harvesterManager.affinity.namespaces.label'),
+        namespaceInputLabel:      this.t('harvester.virtualMachine.affinity.namespaces.label'),
         namespaceSelectionLabels: [
-          this.t('harvesterManager.affinity.thisPodNamespace'),
+          this.t('harvester.virtualMachine.affinity.thisPodNamespace'),
           this.t('workload.scheduling.affinity.allNamespaces'),
-          this.t('harvesterManager.affinity.matchExpressions.inNamespaces')
+          this.t('harvester.virtualMachine.affinity.matchExpressions.inNamespaces')
         ],
-        addLabel:               this.t('harvesterManager.affinity.addLabel'),
-        topologyKeyPlaceholder: this.t('harvesterManager.affinity.topologyKey.placeholder')
+        addLabel:               this.t('harvester.virtualMachine.affinity.addLabel'),
+        topologyKeyPlaceholder: this.t('harvester.virtualMachine.affinity.topologyKey.placeholder')
       };
     },
   },
