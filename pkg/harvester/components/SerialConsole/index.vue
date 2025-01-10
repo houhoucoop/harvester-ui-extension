@@ -60,7 +60,8 @@ export default {
         });
 
         this.queue = [];
-      }, 5)
+      }, 10),
+      deep: true
     }
   },
 
