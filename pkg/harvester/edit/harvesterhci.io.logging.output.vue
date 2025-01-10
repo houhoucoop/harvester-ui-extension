@@ -93,7 +93,7 @@ export default {
     const selectedProviderDefault = providers.find((p) => p.name === selectedProvider)?.default || providers[0].default;
 
     if (this.mode !== _VIEW) {
-      this.$set(this.value.spec, selectedProvider, this.value.spec[selectedProvider] || clone(selectedProviderDefault));
+      set(this.value.spec, selectedProvider, this.value.spec[selectedProvider] || clone(selectedProviderDefault));
     }
 
     return {
