@@ -25,6 +25,9 @@ export default {
 
       return Array.from(new Set(options));
     },
+    enableFilterButton() {
+      return this.rows.some((r) => r.sourceSchedule !== undefined);
+    }
   },
 
   methods: {
@@ -63,7 +66,9 @@ export default {
 </script>
 
 <template>
-  <div class="vm-schedule-filter">
+  <div
+    class="vm-schedule-filter"
+  >
     <span
       v-if="selected"
       class="banner-item bg-warning"
@@ -84,6 +89,7 @@ export default {
       <button
         ref="actionDropDown"
         class="btn bg-primary mr-10"
+        :disabled="!enableFilterButton"
       >
         <slot name="title">
           {{ t('harvester.fields.filterSchedule') }}
