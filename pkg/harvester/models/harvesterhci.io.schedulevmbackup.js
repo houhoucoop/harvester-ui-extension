@@ -64,6 +64,10 @@ export default class ScheduleVmBackup extends HarvesterResource {
     }
   }
 
+  get stateObj() {
+    return this?.metadata?.state || {};
+  }
+
   get state() {
     return this.status?.suspended === true ? STATES.suspended.label : STATES.active.label;
   }
