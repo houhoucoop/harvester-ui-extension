@@ -120,6 +120,8 @@ export default {
 
   methods: {
     changeRows(filteredRows, searchSchedule) {
+      console.log('🚀 ~ changeRows ~ searchSchedule:', searchSchedule);
+      console.log('🚀 ~ changeRows ~ filteredRows:', filteredRows);
       this['searchSchedule'] = searchSchedule;
       this['snapshots'] = filteredRows;
     },
