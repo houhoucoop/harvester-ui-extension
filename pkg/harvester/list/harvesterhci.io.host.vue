@@ -3,7 +3,7 @@ import ResourceTable from '@shell/components/ResourceTable';
 import Loading from '@shell/components/Loading';
 import { STATE, NAME, AGE } from '@shell/config/table-headers';
 import {
-  CAPI, METRIC, NODE, SCHEMA, LONGHORN, POD
+  CAPI, METRIC, NODE, SCHEMA, LONGHORN, POD, MANAGEMENT, NORMAN
 } from '@shell/config/types';
 import { allHash } from '@shell/utils/promise';
 import metricPoller from '@shell/mixins/metric-poller';
@@ -62,7 +62,41 @@ export default {
       _hash.machines = this.$store.dispatch(`${ inStore }/findAll`, { type: CAPI.MACHINE });
     }
 
+    if (
+      this.$store.getters['rancher/schemaFor'](NORMAN.PRINCIPAL) &&
+      this.$store.getters['rancher/schemaFor'](NORMAN.CLUSTER_ROLE_TEMPLATE_BINDING)
+    ) {
+      _hash.normanPrincipal = this.$store.dispatch('rancher/findAll', { type: NORMAN.PRINCIPAL });
+      _hash.clusterRoleTemplateBinding = this.$store.dispatch(`management/findAll`, { type: MANAGEMENT.CLUSTER_ROLE_TEMPLATE_BINDING });
+    }
+
     const hash = await allHash(_hash);
+
+    // Remove delete action if current user role is cluster member
+    if (hash.normanPrincipal && hash.clusterRoleTemplateBinding) {
+      const role = hash.clusterRoleTemplateBinding.find(
+        (template) => template.userPrincipalName === hash.normanPrincipal[0]?.id
+      );
+      const isClusterMember = role?.roleTemplateName === 'cluster-member';
+
+      if (isClusterMember) {
+        hash.nodes = hash.nodes.map((node) => {
+          const updatedActions = node.availableActions.map((action) => {
+            return action.action === 'promptRemove' ? { ...action, enabled: false } : action;
+          });
+
+          // keep availableActions non-enumerable
+          Object.defineProperty(node, 'availableActions', {
+            value:        updatedActions,
+            writable:     true,
+            enumerable:   false,
+            configurable: true,
+          });
+
+          return node;
+        });
+      }
+    }
 
     this.rows = hash.nodes;
   },
