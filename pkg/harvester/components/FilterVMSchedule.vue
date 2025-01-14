@@ -25,6 +25,9 @@ export default {
 
       return Array.from(new Set(options));
     },
+    enableFilterButton() {
+      return this.rows.some((r) => r.sourceSchedule !== undefined);
+    }
   },
 
   methods: {
@@ -63,27 +66,30 @@ export default {
 </script>
 
 <template>
-  <div class="vm-schedule-filter">
-    <template>
-      <span
-        v-if="selected"
-        class="banner-item bg-warning"
-      >
-        {{ t('harvester.tableHeaders.vmSchedule') }}{{ selected ? ` = ${selected}`: '' }}<i
-          class="icon icon-close ml-5"
-          @click="remove"
-        />
-      </span>
-    </template>
-
+  <div
+    class="vm-schedule-filter"
+  >
+    <span
+      v-if="selected"
+      class="banner-item bg-warning"
+    >
+      {{ t('harvester.tableHeaders.vmSchedule') }}{{ selected ? ` = ${selected}`: '' }}
+      <i
+        class="icon icon-close ml-5"
+        @click="remove"
+      />
+    </span>
     <v-dropdown
+      popper-class="vm-schedule-dropdown"
       :triggers="scheduleOptions.length ? ['click'] : []"
       placement="bottom-end"
       offset="1"
+      :distance="20"
     >
       <button
         ref="actionDropDown"
         class="btn bg-primary mr-10"
+        :disabled="!enableFilterButton"
       >
         <slot name="title">
           {{ t('harvester.fields.filterSchedule') }}
@@ -98,13 +104,19 @@ export default {
             name="model"
             :options="scheduleOptions"
             :labels="scheduleOptions"
-            @input="onSelect"
+            @update:value="onSelect"
           />
         </div>
       </template>
     </v-dropdown>
   </div>
 </template>
+
+<style lang="scss">
+.vm-schedule-dropdown .v-popper__arrow-container {
+  display: none;
+}
+</style>
 
 <style lang="scss" scoped>
 .vm-schedule-filter {
