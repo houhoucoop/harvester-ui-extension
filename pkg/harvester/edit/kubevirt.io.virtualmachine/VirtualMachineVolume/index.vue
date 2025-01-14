@@ -280,7 +280,7 @@ export default {
     >
       <div
         v-for="(volume, i) in rows"
-        :key="volume.name"
+        :key="volume.id"
       >
         <InfoBox class="box">
           <button
