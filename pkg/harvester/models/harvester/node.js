@@ -1,5 +1,7 @@
 import pickBy from 'lodash/pickBy';
-import { CAPI, LONGHORN, POD, NODE, NORMAN } from '@shell/config/types';
+import {
+  CAPI, LONGHORN, POD, NODE, NORMAN
+} from '@shell/config/types';
 import { CAPI as CAPI_ANNOTATIONS } from '@shell/config/labels-annotations.js';
 import { HCI as HCI_ANNOTATIONS } from '@pkg/harvester/config/labels-annotations';
 import { clone } from '@shell/utils/object';
