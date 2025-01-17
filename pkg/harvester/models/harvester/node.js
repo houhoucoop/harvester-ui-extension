@@ -27,17 +27,7 @@ const HEALTHY = 'healthy';
 const WARNING = 'warning';
 
 export default class HciNode extends HarvesterResource {
-  constructor(...args) {
-    super(...args);
-    this._roleBasedActions = [];
-    this._initialized = false; // flag to prevent repeated initialization
-  }
-
   get _availableActions() {
-    if (!this._initialized) {
-      this.setupRoleBasedActions();
-    }
-
     const cordon = {
       action:  'cordon',
       enabled: this.hasAction('cordon') && !this.isCordoned,
@@ -120,42 +110,8 @@ export default class HciNode extends HarvesterResource {
       shutDown,
       powerOn,
       reboot,
-      ...this._roleBasedActions || []
+      ...super._availableActions
     ];
-  }
-
-  async setupRoleBasedActions() {
-    const baseActions = super._availableActions || [];
-
-    // access control is only available on the multiple cluster Harvester
-    if (this.$rootGetters['isStandaloneHarvester']) {
-      this._roleBasedActions = baseActions;
-    } else {
-      this._roleBasedActions = await this._updateRoleBasedActions(baseActions);
-    }
-
-    this._initialized = true;
-  }
-
-  async _updateRoleBasedActions(actions) {
-    const hasSchema = (type) => this.$rootGetters['rancher/schemaFor'](type);
-
-    if (!hasSchema(NORMAN.PRINCIPAL) || !hasSchema(NORMAN.CLUSTER_ROLE_TEMPLATE_BINDING)) return actions;
-
-    try {
-      const templates = await this.$dispatch('rancher/findAll', { type: NORMAN.CLUSTER_ROLE_TEMPLATE_BINDING }, { root: true });
-      const [currentUser] = this.$rootGetters['rancher/all'](NORMAN.PRINCIPAL) || [];
-      const userRole = templates.find((template) => template.userPrincipalId === currentUser?.id);
-
-      if (userRole?.roleTemplateId === 'cluster-member') {
-        return actions.filter((action) => action.action !== 'promptRemove');
-      }
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error('Error fetching role-based actions:', error);
-    }
-
-    return actions;
   }
 
   promptRemove(resources = this) {
@@ -513,10 +469,35 @@ export default class HciNode extends HarvesterResource {
     return parseSi(this.reserved.memory || '0');
   }
 
+  // returns the user role, either 'cluster-owner' or 'cluster-member'
+  async _getRoleTemplateId() {
+    try {
+      const templates = await this.$dispatch('rancher/findAll', { type: NORMAN.CLUSTER_ROLE_TEMPLATE_BINDING }, { root: true });
+      const currentUser = this.$rootGetters['rancher/all'](NORMAN.PRINCIPAL)?.[0];
+      const userRole = templates.find((template) => template.userPrincipalId === currentUser?.id);
+
+      return userRole?.roleTemplateId || 'cluster-member';
+    } catch (error) {
+      return 'cluster-member';
+    }
+  }
+
   get canDelete() {
     const nodes = this.$rootGetters['harvester/all'](NODE) || [];
+    const isSingleNode = nodes.length === 1;
 
-    return nodes.length > 1;
+    if (isSingleNode) return false;
+
+    // access control is unavailable in standalone harvester
+    if (this.$rootGetters['isStandaloneHarvester']) return true;
+
+    if (this._canDelete === undefined) {
+      return this._getRoleTemplateId().then((id) => {
+        this._canDelete = id === 'cluster-owner';
+      });
+    }
+
+    return this._canDelete;
   }
 
   get vlanStatuses() {
