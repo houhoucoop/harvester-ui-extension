@@ -61,7 +61,6 @@ export default {
       images:         this.$store.dispatch(`${ inStore }/findAll`, { type: HCI.IMAGE }),
       storageClasses: this.$store.dispatch(`${ inStore }/findAll`, { type: STORAGE_CLASS }),
     });
-
     this['storageClassName'] = this.storageClassName || this.defaultStorageClassName();
     this.images = this.$store.getters[`${ inStore }/all`](HCI.IMAGE);
 
@@ -253,7 +252,7 @@ export default {
     },
     'value.spec.securityParameters.cryptoOperation'() {
       if (this.value.spec?.securityParameters?.cryptoOperation === ENCRYPT) {
-        this.storageClassName = this.encryptedStorageClasses[0]?.name || LONGHORN;
+        this.storageClassName = this.encryptedStorageClasses[0]?.name || '';
       } else { // URL / FILE / DECRYPT should use default storage class
         this.storageClassName = this.defaultStorageClassName();
       }
@@ -409,6 +408,10 @@ export default {
     defaultStorageClassName() {
       const inStore = this.$store.getters['currentProduct'].inStore;
       const defaultStorage = this.$store.getters[`${ inStore }/all`](STORAGE_CLASS).find((s) => s.isDefault);
+
+      if (!defaultStorage) {
+        return LONGHORN;
+      }
 
       // if default sc is encrypted, use longhorn as default
       return defaultStorage.isEncrypted ? LONGHORN : defaultStorage?.metadata?.name;
