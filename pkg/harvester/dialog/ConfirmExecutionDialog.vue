@@ -6,7 +6,6 @@ import AsyncButton from '@shell/components/AsyncButton';
 import { Banner } from '@components/Banner';
 import { Card } from '@components/Card';
 import { escapeHtml } from '@shell/utils/string';
-import CopyToClipboardText from '@shell/components/CopyToClipboardText';
 
 /**
  * @name ConfirmExecutionDialog
@@ -21,7 +20,6 @@ export default {
     AsyncButton,
     Banner,
     Card,
-    CopyToClipboardText
   },
 
   props: {
@@ -36,7 +34,7 @@ export default {
   },
 
   data() {
-    return { errors: [], confirmName: '' };
+    return { errors: [] };
   },
 
   computed: {
@@ -66,10 +64,6 @@ export default {
       }, '');
     },
 
-    nameToMatch() {
-      return this.resources[0].nameDisplay;
-    },
-
     plusMore() {
       const remaining = this.resources.length - this.names.length;
 
@@ -96,10 +90,6 @@ export default {
       return this.$store.getters['type-map/labelFor'](schema, this.resources.length);
     },
 
-    applyDisabled() {
-      return this.confirmName !== this.nameToMatch;
-    },
-
     protip() {
       return this.t('dialog.confirmExecution.protip', { alternateLabel });
     },
@@ -109,7 +99,6 @@ export default {
     escapeHtml,
 
     close() {
-      this.confirmName = '';
       this.errors = [];
       this.$emit('close');
     },
@@ -132,7 +121,6 @@ export default {
 
 <template>
   <Card
-    class="prompt-related"
     :show-highlight-border="false"
   >
     <template #title>
@@ -146,20 +134,6 @@ export default {
         <span
           v-clean-html="t(warningMessageKey, { type, names: resourceNames }, true)"
         ></span>
-
-        <div class="mt-10 mb-10">
-          <span
-            v-clean-html="t('dialog.confirmExecution.confirmName', { nameToMatch: escapeHtml(nameToMatch) }, true)"
-          ></span>
-        </div>
-        <div class="mb-10">
-          <CopyToClipboardText :text="nameToMatch" />
-        </div>
-        <input
-          id="confirm"
-          v-model="confirmName"
-          type="text"
-        />
         <div class="text-info mt-20">
           {{ protip }}
         </div>
@@ -171,24 +145,27 @@ export default {
     </template>
 
     <template #actions>
-      <button
-        class="btn role-secondary mr-10"
-        @click="close"
-      >
-        {{ t('generic.cancel') }}
-      </button>
-      <AsyncButton
-        mode="apply"
-        class="btn bg-error ml-10"
-        :disabled="applyDisabled"
-        @click="apply"
-      />
+      <div class="actions">
+        <button
+          class="btn role-secondary"
+          @click="close"
+        >
+          {{ t('generic.cancel') }}
+        </button>
+        <AsyncButton
+          mode="apply"
+          class="btn bg-error ml-10"
+          :disabled="applyDisabled"
+          @click="apply"
+        />
+      </div>
     </template>
   </Card>
 </template>
 
 <style lang='scss' scoped>
   .actions {
+    width: 100%;
     text-align: right;
   }
 </style>
