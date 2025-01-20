@@ -1,7 +1,5 @@
 import pickBy from 'lodash/pickBy';
-import {
-  CAPI, LONGHORN, POD, NODE, NORMAN
-} from '@shell/config/types';
+import { CAPI, LONGHORN, POD, NODE } from '@shell/config/types';
 import { CAPI as CAPI_ANNOTATIONS } from '@shell/config/labels-annotations.js';
 import { HCI as HCI_ANNOTATIONS } from '@pkg/harvester/config/labels-annotations';
 import { clone } from '@shell/utils/object';
@@ -469,35 +467,10 @@ export default class HciNode extends HarvesterResource {
     return parseSi(this.reserved.memory || '0');
   }
 
-  // returns the user role, either 'cluster-owner' or 'cluster-member'
-  async _getRoleTemplateId() {
-    try {
-      const templates = await this.$dispatch('rancher/findAll', { type: NORMAN.CLUSTER_ROLE_TEMPLATE_BINDING }, { root: true });
-      const currentUser = this.$rootGetters['rancher/all'](NORMAN.PRINCIPAL)?.[0];
-      const userRole = templates.find((template) => template.userPrincipalId === currentUser?.id);
-
-      return userRole?.roleTemplateId || 'cluster-member';
-    } catch (error) {
-      return 'cluster-member';
-    }
-  }
-
   get canDelete() {
     const nodes = this.$rootGetters['harvester/all'](NODE) || [];
-    const isSingleNode = nodes.length === 1;
 
-    if (isSingleNode) return false;
-
-    // access control is unavailable in standalone harvester
-    if (this.$rootGetters['isStandaloneHarvester']) return true;
-
-    if (this._canDelete === undefined) {
-      return this._getRoleTemplateId().then((id) => {
-        this._canDelete = id === 'cluster-owner';
-      });
-    }
-
-    return this._canDelete;
+    return nodes.length > 1 && super.canDelete;
   }
 
   get vlanStatuses() {
