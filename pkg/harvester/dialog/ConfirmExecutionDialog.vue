@@ -120,9 +120,7 @@ export default {
 </script>
 
 <template>
-  <Card
-    :show-highlight-border="false"
-  >
+  <Card :show-highlight-border="false">
     <template #title>
       <h4 class="text-default-text">
         {{ t('dialog.confirmExecution.title') }}
@@ -154,7 +152,7 @@ export default {
         </button>
         <AsyncButton
           mode="apply"
-          class="btn bg-error ml-10"
+          class="btn bg-primary ml-10"
           :disabled="applyDisabled"
           @click="apply"
         />
@@ -164,6 +162,10 @@ export default {
 </template>
 
 <style lang='scss' scoped>
+  .modal-container {
+    max-width: 400px;
+  }
+
   .actions {
     width: 100%;
     text-align: right;
