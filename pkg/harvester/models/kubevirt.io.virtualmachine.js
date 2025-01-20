@@ -102,12 +102,13 @@ export default class VirtVm extends HarvesterResource {
 
     return [
       {
-        action:    'stopVM',
-        altAction: 'altStopVM',
-        enabled:   !!this.actions?.stop,
-        icon:      'icon icon-close',
-        label:     this.t('harvester.action.stop'),
-        bulkable:  true
+        action:     'stopVM',
+        altAction:  'altStopVM',
+        enabled:    !!this.actions?.stop,
+        icon:       'icon icon-close',
+        label:      this.t('harvester.action.stop'),
+        bulkable:   true,
+        bulkAction: 'stopVM',
       },
       {
         action:   'forceStop',

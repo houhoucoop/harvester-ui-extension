@@ -47,7 +47,6 @@ dialog:
       =1 { and <b>one other </b>}
       other { and <b>{count} other </b>}
       }
-    confirmName: "Enter <b>{nameToMatch}</b> below to confirm:"
     protip: "Tip: Hold the {alternateLabel} key while clicking action to bypass this confirmation"
     stop:
       message: "Are you sure you want to continue stop the {type} {names}?"
