@@ -470,7 +470,7 @@ export default class HciNode extends HarvesterResource {
   get canDelete() {
     const nodes = this.$rootGetters['harvester/all'](NODE) || [];
 
-    return nodes.length > 1;
+    return nodes.length > 1 && super.canDelete;
   }
 
   get vlanStatuses() {
