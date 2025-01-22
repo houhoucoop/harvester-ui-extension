@@ -11,25 +11,34 @@ defaults:
     working-directory: ./
 
 jobs:
-  clear-yarn-cache:
+  lint:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Run tests
+        uses: ./.github/actions/lint
 
-      - name: Clear Yarn cache
-        run: |
-          yarn cache clean
+  clean-cache:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: clean yarn cache
+        run: yarn cache clean
 
   build-extension-charts:
-    needs: clear-yarn-cache 
+    needs: clean-cache
     uses: rancher/dashboard/.github/workflows/build-extension-charts.yml@master
-    with:
-      target_branch: gh-pages
-      tagged_release: ${{ github.ref_name }}
     permissions:
       actions: write
       contents: write
       deployments: write
       pages: write
-
+    with:
+      target_branch: gh-pages
+      tagged_release: ${{ github.ref_name }}
