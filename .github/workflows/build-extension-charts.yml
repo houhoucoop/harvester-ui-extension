@@ -11,24 +11,27 @@ defaults:
     working-directory: ./
 
 jobs:
-  cache-dependencies:
+  clean-cache:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
-      - name: Cache yarn dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.yarn/cache
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock', '**/package.json') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
+      - name: check if yarn.lock or package.json changed
+        id: check-changes
+        run: |
+          git diff --exit-code --quiet yarn.lock || echo "yarn.lock has changed"
+          git diff --exit-code --quiet package.json || echo "package.json has changed"
+
+      - name: clean yarn cache
+        if: steps.check-changes.outputs.changed == 'true'
+        run: |
+          yarn cache clean
+          rm -rf ~/.yarn/cache
 
   lint:
     runs-on: ubuntu-latest
-    needs: cache-dependencies
     steps:
       - uses: actions/checkout@v4
         with:
@@ -40,7 +43,7 @@ jobs:
   build-extension-charts:
     needs:
       - lint
-      - cache-dependencies
+      - clean-cache
     uses: rancher/dashboard/.github/workflows/build-extension-charts.yml@master
     permissions:
       actions: write
