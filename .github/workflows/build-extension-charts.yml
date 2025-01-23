@@ -17,10 +17,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-
-      - name: clean yarn cache
-        run: yarn cache clean
-
       - name: Run tests
         uses: ./.github/actions/lint
 
@@ -36,3 +32,7 @@ jobs:
     with:
       target_branch: gh-pages
       tagged_release: ${{ github.ref_name }}
+    steps:
+      - name: clear yarn cache
+        run: |
+          yarn cache clean
