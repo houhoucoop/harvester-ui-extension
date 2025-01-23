@@ -19,7 +19,6 @@ jobs:
           fetch-depth: 1
 
       - name: clean yarn cache
-        if: steps.check-changes.outputs.changed == 'true'
         run: |
           yarn cache clean
           rm -rf ~/.yarn/cache
