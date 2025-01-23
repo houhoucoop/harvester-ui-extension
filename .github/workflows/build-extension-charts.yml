@@ -18,11 +18,11 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: cache yarn dependencies
+      - name: Cache yarn dependencies
         uses: actions/cache@v3
         with:
           path: ~/.yarn/cache
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock', '**/package.json') }}
           restore-keys: |
             ${{ runner.os }}-yarn-
 
