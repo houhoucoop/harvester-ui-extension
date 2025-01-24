@@ -18,11 +18,6 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: clean yarn cache
-        run: |
-          yarn cache clean
-          rm -rf ~/.yarn/cache
-
       - name: Run tests
         uses: ./.github/actions/lint
   
