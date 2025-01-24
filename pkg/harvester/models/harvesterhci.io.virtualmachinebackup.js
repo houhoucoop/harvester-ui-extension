@@ -132,7 +132,7 @@ export default class HciVmBackup extends HarvesterResource {
   }
 
   get sourceSchedule() {
-    return this.metadata?.annotations[HCI_ANNOTATIONS.SVM_BACKUP_ID];
+    return this.metadata?.annotations?.[HCI_ANNOTATIONS.SVM_BACKUP_ID];
   }
 
   get attachVM() {
