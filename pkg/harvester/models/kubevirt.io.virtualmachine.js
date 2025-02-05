@@ -640,6 +640,10 @@ export default class VirtVm extends HarvesterResource {
   }
 
   get encryptedVolumeType() {
+    if (!this.volumes || this.volumes.length === 0) {
+      return 'none';
+    }
+
     if (this.volumes.every((vol) => vol.isEncrypted)) {
       return 'all';
     } else if (this.volumes.some((vol) => vol.isEncrypted)) {
