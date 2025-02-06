@@ -889,6 +889,17 @@ export default {
           :label="t('harvester.virtualMachine.secureBoot')"
           :mode="mode"
         />
+
+        <Checkbox
+          v-if="tpmEnabled || efiEnabled"
+          class="check"
+          type="checkbox"
+          :label="t('harvester.virtualMachine.advancedOptions.persistentState')"
+          :mode="mode"
+          :value="true"
+          :disabled="true"
+        />
+
         <Banner
           v-if="showCpuPinningBanner"
           color="warning"
