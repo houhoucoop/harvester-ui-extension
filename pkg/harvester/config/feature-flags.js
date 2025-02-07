@@ -47,7 +47,8 @@ const featuresV142 = [
 
 // TODO: add v1.5.0 official release note
 const featuresV150 = [
-  ...featuresV142
+  ...featuresV142,
+  'VMPersistentState'
 ];
 
 export const RELEASE_FEATURES = {

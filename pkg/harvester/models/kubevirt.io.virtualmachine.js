@@ -1175,6 +1175,10 @@ export default class VirtVm extends HarvesterResource {
     return this.$rootGetters['harvester-common/getFeatureEnabled']('volumeEncryption');
   }
 
+  get persistentStateFeatureEnabled() {
+    return this.$rootGetters['harvester-common/getFeatureEnabled']('VMPersistentState');
+  }
+
   setInstanceLabels(val) {
     if ( !this.spec?.template?.metadata?.labels ) {
       set(this, 'spec.template.metadata.labels', {});
