@@ -874,7 +874,7 @@ export default {
         />
 
         <Checkbox
-          v-if="tpmEnabled"
+          v-if="value.persistentStateFeatureEnabled && tpmEnabled"
           v-model:value="persistentStateEnabled"
           class="check"
           type="checkbox"
