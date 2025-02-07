@@ -874,6 +874,15 @@ export default {
         />
 
         <Checkbox
+          v-if="tpmEnabled"
+          v-model:value="persistentStateEnabled"
+          class="check"
+          type="checkbox"
+          :label="t('harvester.virtualMachine.advancedOptions.persistentState')"
+          :mode="mode"
+        />
+
+        <Checkbox
           v-model:value="efiEnabled"
           class="check"
           type="checkbox"
@@ -888,16 +897,6 @@ export default {
           type="checkbox"
           :label="t('harvester.virtualMachine.secureBoot')"
           :mode="mode"
-        />
-
-        <Checkbox
-          v-if="tpmEnabled || efiEnabled"
-          class="check"
-          type="checkbox"
-          :label="t('harvester.virtualMachine.advancedOptions.persistentState')"
-          :mode="mode"
-          :value="true"
-          :disabled="true"
         />
 
         <Banner

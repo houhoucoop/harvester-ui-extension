@@ -137,7 +137,11 @@ export default {
     },
 
     isTpmEnabled(spec) {
-      return !!spec?.template?.spec?.domain?.devices?.tpm ;
+      return !!spec?.template?.spec?.domain?.devices?.tpm;
+    },
+
+    isPersistentStateEnabled(spec) {
+      return !!spec?.template?.spec?.domain?.devices?.tpm?.persistent;
     },
 
     isSecureBoot(spec) {
