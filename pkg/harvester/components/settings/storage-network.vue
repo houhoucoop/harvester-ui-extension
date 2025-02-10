@@ -12,6 +12,9 @@ import { NODE } from '@shell/config/types';
 import { HCI } from '../../types';
 import { DOC } from '../../config/doc-links';
 import { docLink } from '../../utils/feature-flags';
+import { NETWORK_TYPE } from '../../config/types';
+
+const { L2VLAN, UNTAGGED } = NETWORK_TYPE;
 
 export default {
   name: 'HarvesterEditStorageNetwork',
@@ -57,11 +60,14 @@ export default {
   data() {
     let parsedDefaultValue = {};
     let openVlan = false;
+    let networkType = L2VLAN;
 
     try {
       parsedDefaultValue = JSON.parse(this.value.value);
+      networkType = 'vlan' in parsedDefaultValue ? L2VLAN : UNTAGGED; // backend doesn't provide networkType, so we check if vlan is provided instead
       openVlan = true;
     } catch (error) {
+      networkType = L2VLAN;
       parsedDefaultValue = {
         vlan:           '',
         clusterNetwork: '',
@@ -73,6 +79,7 @@ export default {
 
     return {
       openVlan,
+      networkType,
       errors:          [],
       exclude,
       parsedDefaultValue,
@@ -87,16 +94,35 @@ export default {
   },
 
   computed: {
+    showVlan() {
+      return this.networkType === L2VLAN;
+    },
+    networkTypes() {
+      const types = [L2VLAN];
+
+      if (this.unTaggedNetworkSettingEnabled) {
+        types.push(UNTAGGED);
+      }
+
+      return types;
+    },
     storageNetworkExampleLink() {
       const version = this.$store.getters['harvester-common/getServerVersion']();
 
       return docLink(DOC.STORAGE_NETWORK_EXAMPLE, version);
     },
+
+    unTaggedNetworkSettingEnabled() {
+      return this.$store.getters['harvester-common/getFeatureEnabled']('unTaggedNetworkSetting');
+    },
+
     clusterNetworkOptions() {
       const inStore = this.$store.getters['currentProduct'].inStore;
       const clusterNetworks = this.$store.getters[`${ inStore }/all`](HCI.CLUSTER_NETWORK) || [];
+      // untaggedNetwork filter out mgmt cluster network
+      const clusterNetworksOptions = this.networkType === UNTAGGED ? clusterNetworks.filter((net) => net.id !== 'mgmt') : clusterNetworks;
 
-      return clusterNetworks.map((n) => {
+      return clusterNetworksOptions.map((n) => {
         const disabled = !n.isReadyForStorageNetwork;
 
         return {
@@ -108,7 +134,50 @@ export default {
     },
   },
 
+  watch: {
+    networkType: {
+      handler(neu) {
+        this.parsedDefaultValue.clusterNetwork = '';
+
+        if (neu === L2VLAN) {
+          this.parsedDefaultValue.vlan = '';
+        } else {
+          delete this.parsedDefaultValue.vlan;
+        }
+      },
+      deep: true
+    }
+  },
+
   methods: {
+    inputVlan(neu) {
+      if (neu === '') {
+        this.parsedDefaultValue.vlan = '';
+
+        return;
+      }
+      const newValue = Number(neu);
+
+      if (newValue > 4094) {
+        this.parsedDefaultValue.vlan = 4094;
+      } else if (newValue < 1) {
+        this.parsedDefaultValue.vlan = 1;
+      } else {
+        this.parsedDefaultValue.vlan = newValue;
+      }
+    },
+
+    useDefault() {
+      this.openVlan = false;
+      this.networkType = L2VLAN;
+      this.parsedDefaultValue = {
+        vlan:           '',
+        clusterNetwork: '',
+        range:          '',
+        exclude:        []
+      };
+    },
+
     update() {
       const exclude = this.exclude.filter((ip) => ip);
 
@@ -138,7 +207,7 @@ export default {
           errors.push(this.t('harvester.setting.storageNetwork.range.invalid', null, true));
         }
 
-        if (!this.parsedDefaultValue.vlan) {
+        if (this.networkType === L2VLAN && !this.parsedDefaultValue.vlan) {
           errors.push(this.t('validation.required', { key: this.t('harvester.setting.storageNetwork.vlan') }, true));
         }
 
@@ -191,13 +260,25 @@ export default {
     />
 
     <div v-if="openVlan">
+      <LabeledSelect
+        v-model:value="networkType"
+        class="mb-20"
+        :options="networkTypes"
+        :mode="mode"
+        :label="t('harvester.fields.type')"
+        required
+      />
+
       <LabeledInput
+        v-if="showVlan"
         v-model:value.number="parsedDefaultValue.vlan"
         type="number"
         class="mb-20"
         :mode="mode"
         required
+        placeholder="e.g. 1 - 4094"
         label-key="harvester.setting.storageNetwork.vlan"
+        @update:value="inputVlan"
       />
 
       <LabeledSelect
