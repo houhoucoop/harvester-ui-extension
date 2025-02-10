@@ -273,7 +273,7 @@ export default class HciVmTemplateVersion extends HarvesterResource {
     this.spec.vm.spec.template.metadata['labels'] = { ...wasIgnored, ...val };
   }
 
-  get persistentStateFeatureEnabled() {
-    return this.$rootGetters['harvester-common/getFeatureEnabled']('VMPersistentState');
+  get tpmPersistentStateFeatureEnabled() {
+    return this.$rootGetters['harvester-common/getFeatureEnabled']('tpmPersistentState');
   }
 }
