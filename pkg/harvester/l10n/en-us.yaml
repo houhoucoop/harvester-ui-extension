@@ -1027,7 +1027,7 @@ harvester:
         invalid: '"Exclude list" is invalid.'
         addIp: Add Exclude IP
       warning: 'WARNING: <br/> Any change to storage-network requires shutting down all virtual machines before applying this setting. <br/> Users have to ensure the cluster network is configured and VLAN Configuration will cover all nodes and ensure the network connectivity is working and expected in all nodes.'
-      tip: 'Specify an IP range in the IPv4 CIDR format. <code>Number of IPs Required = Number of Nodes * 4 + Number of Disks * 2 + Number of Images to Download/Upload </code>. For more information about storage network settings, see the <a href="{url}" target="_blank">documentation</a>.'
+      tip: 'Specify an IP range in the IPv4 CIDR format. <code>Number of IPs Required = Number of Nodes * 2 + Number of Disks * 2 + Number of Images to Download/Upload </code>. For more information about storage network settings, see the <a href="{url}" target="_blank">documentation</a>.'
     vmForceDeletionPolicy:
       period: Period
     ratio : Ratio
