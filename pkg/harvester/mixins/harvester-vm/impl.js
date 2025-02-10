@@ -140,7 +140,7 @@ export default {
       return !!spec?.template?.spec?.domain?.devices?.tpm;
     },
 
-    isPersistentStateEnabled(spec) {
+    isTPMPersistentStateEnabled(spec) {
       return !!spec?.template?.spec?.domain?.devices?.tpm?.persistent;
     },
 

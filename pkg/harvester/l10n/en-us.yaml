@@ -594,7 +594,7 @@ harvester:
     enableUsb: Enable USB Tablet
     advancedOptions:
       tpm: Enable TPM
-      persistentState: Persistent State
+      tpmPersistentState: TPM Persistent State
       cpuManager:
         prefix: You must enable CPU Manager for at least one node in
         middle: 'host page'
