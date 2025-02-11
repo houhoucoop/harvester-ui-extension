@@ -48,7 +48,8 @@ const featuresV142 = [
 // TODO: add v1.5.0 official release note
 const featuresV150 = [
   ...featuresV142,
-  'tpmPersistentState'
+  'tpmPersistentState',
+  'untaggedNetworkSetting'
 ];
 
 export const RELEASE_FEATURES = {

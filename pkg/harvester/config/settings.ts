@@ -65,7 +65,9 @@ export const HCI_ALLOWED_SETTINGS = {
   [HCI_SETTING.SUPPORT_BUNDLE_EXPIRATION]:              {},
   [HCI_SETTING.SUPPORT_BUNDLE_NODE_COLLECTION_TIMEOUT]: { featureFlag: 'supportBundleNodeCollectionTimeoutSetting' },
   [HCI_SETTING.SUPPORT_BUNDLE_IMAGE]:                   { kind: 'json', from: 'import' },
-  [HCI_SETTING.STORAGE_NETWORK]:                        { kind: 'custom', from: 'import' },
+  [HCI_SETTING.STORAGE_NETWORK]:                        {
+    kind: 'custom', from: 'import', canReset: true
+  },
   [HCI_SETTING.VM_FORCE_RESET_POLICY]:                  { kind: 'json', from: 'import' },
   [HCI_SETTING.SSL_CERTIFICATES]:                       { kind: 'json', from: 'import' },
   [HCI_SETTING.SSL_PARAMETERS]:                         {
