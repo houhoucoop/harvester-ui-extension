@@ -11,6 +11,9 @@ import { HCI as HCI_LABELS_ANNOTATIONS } from '@pkg/harvester/config/labels-anno
 import CreateEditView from '@shell/mixins/create-edit-view';
 import { allHash } from '@shell/utils/promise';
 import { HCI } from '../types';
+import { NETWORK_TYPE } from '../config/types';
+
+const { L2VLAN, UNTAGGED } = NETWORK_TYPE;
 
 const AUTO = 'auto';
 const MANUAL = 'manual';
@@ -48,7 +51,7 @@ export default {
       config.bridge = config.bridge.slice(0, -3);
     }
 
-    const type = this.value.vlanType || 'L2VlanNetwork' ;
+    const type = this.value.vlanType || L2VLAN ;
 
     return {
       config,
@@ -101,15 +104,15 @@ export default {
     },
 
     networkType() {
-      return ['L2VlanNetwork', 'UntaggedNetwork'];
+      return [L2VLAN, UNTAGGED];
     },
 
     isUntaggedNetwork() {
       if (this.isView) {
-        return this.value.vlanType === 'UntaggedNetwork';
+        return this.value.vlanType === UNTAGGED;
       }
 
-      return this.type === 'UntaggedNetwork';
+      return this.type === UNTAGGED;
     }
   },
 
