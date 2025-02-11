@@ -249,7 +249,7 @@ export default {
       :searchable="searchable"
       :disabled="disabled"
       :options="sshOption"
-      @update:value="update"
+      @input="update"
     />
 
     <ModalWithCard
