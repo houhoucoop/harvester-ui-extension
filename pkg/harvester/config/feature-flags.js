@@ -49,7 +49,7 @@ const featuresV142 = [
 const featuresV150 = [
   ...featuresV142,
   'tpmPersistentState',
-  'unTaggedNetworkSetting'
+  'untaggedNetworkSetting'
 ];
 
 export const RELEASE_FEATURES = {

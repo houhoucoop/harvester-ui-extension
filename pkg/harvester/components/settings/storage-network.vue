@@ -100,7 +100,7 @@ export default {
     networkTypes() {
       const types = [L2VLAN];
 
-      if (this.unTaggedNetworkSettingEnabled) {
+      if (this.untaggedNetworkSettingEnabled) {
         types.push(UNTAGGED);
       }
 
@@ -112,8 +112,8 @@ export default {
       return docLink(DOC.STORAGE_NETWORK_EXAMPLE, version);
     },
 
-    unTaggedNetworkSettingEnabled() {
-      return this.$store.getters['harvester-common/getFeatureEnabled']('unTaggedNetworkSetting');
+    untaggedNetworkSettingEnabled() {
+      return this.$store.getters['harvester-common/getFeatureEnabled']('untaggedNetworkSetting');
     },
 
     clusterNetworkOptions() {
