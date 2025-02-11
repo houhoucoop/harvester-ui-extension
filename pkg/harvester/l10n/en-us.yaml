@@ -854,6 +854,7 @@ harvester:
     currentVersion: CURRENT VERSION
     versionLabel: AVAILABLE COMPATIBLE VERSIONS
     enableLogging: Enable Logging
+    skipSingleReplicaDetachedVol: Skip checking single-replica detached volumes
     upgradeNode: Upgrading Node
     upgradeSysService: Upgrading System Service
     upgradeImage: Download Upgrade Image
