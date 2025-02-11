@@ -466,6 +466,15 @@ export default {
         />
 
         <Checkbox
+          v-if="value.tpmPersistentStateFeatureEnabled && tpmEnabled"
+          v-model:value="tpmPersistentStateEnabled"
+          class="check"
+          type="checkbox"
+          :label="t('harvester.virtualMachine.advancedOptions.tpmPersistentState')"
+          :mode="mode"
+        />
+
+        <Checkbox
           v-model:value="efiEnabled"
           class="check"
           type="checkbox"
