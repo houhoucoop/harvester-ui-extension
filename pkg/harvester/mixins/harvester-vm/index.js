@@ -164,6 +164,7 @@ export default {
       accessCredentials:             [],
       efiEnabled:                    false,
       tpmEnabled:                    false,
+      tpmPersistentStateEnabled:     false,
       secureBoot:                    false,
       userDataTemplateId:            '',
       saveUserDataAsClearText:       false,
@@ -367,6 +368,7 @@ export default {
       const installAgent = this.hasInstallAgent(userData, osType, true);
       const efiEnabled = this.isEfiEnabled(spec);
       const tpmEnabled = this.isTpmEnabled(spec);
+      const tpmPersistentStateEnabled = this.isTPMPersistentStateEnabled(spec);
       const secureBoot = this.isSecureBoot(spec);
       const cpuPinning = this.isCpuPinning(spec);
 
@@ -399,6 +401,7 @@ export default {
       this['installUSBTablet'] = installUSBTablet;
       this['efiEnabled'] = efiEnabled;
       this['tpmEnabled'] = tpmEnabled;
+      this['tpmPersistentStateEnabled'] = tpmPersistentStateEnabled;
       this['secureBoot'] = secureBoot;
       this['cpuPinning'] = cpuPinning;
 
@@ -1421,6 +1424,14 @@ export default {
       }
     },
 
+    setTPMPersistentStateEnabled(tpmPersistentStateEnabled) {
+      if (tpmPersistentStateEnabled) {
+        set(this.spec.template.spec.domain.devices, 'tpm', { persistent: true });
+      } else {
+        set(this.spec.template.spec.domain.devices, 'tpm', {});
+      }
+    },
+
     deleteSSHFromUserData(ssh = []) {
       const sshAuthorizedKeys = this.getSSHFromUserData(this.userScript);
 
@@ -1542,6 +1553,10 @@ export default {
 
     tpmEnabled(val) {
       this.setTPM(val);
+    },
+
+    tpmPersistentStateEnabled(val) {
+      this.setTPMPersistentStateEnabled(val);
     },
 
     installAgent: {
