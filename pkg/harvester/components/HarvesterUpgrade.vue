@@ -213,7 +213,10 @@ export default {
               :label="t('harvester.upgradePage.skipSingleReplicaDetachedVol')"
             />
           </div>
-
+          <hr
+            v-if="version"
+            class="divider"
+          />
           <div v-if="version">
             <p
               v-clean-html="t('harvester.upgradePage.releaseTip', {url: releaseLink}, true)"
