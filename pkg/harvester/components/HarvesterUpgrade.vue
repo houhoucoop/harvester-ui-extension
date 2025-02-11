@@ -30,7 +30,7 @@ export default {
 
   data() {
     return {
-      upgrade:                       [],
+      upgrade:                      [],
       upgradeMessage:               [],
       errors:                       '',
       selectMode:                   true,
@@ -106,7 +106,7 @@ export default {
         type:     HCI.UPGRADE,
         metadata: {
           generateName: 'hvst-upgrade-',
-          namespace:    'harvester-system',
+          namespace:    'harvester-system'
         },
         spec: { version: this.version }
       };
