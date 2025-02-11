@@ -1518,18 +1518,6 @@ harvester:
       pollingInterval:
         label: Polling Interval
 
-  affinity:
-    thisPodNamespace: This virtual machine's namespace
-    matchExpressions:
-      inNamespaces: "Workloads in these namespaces"
-    vmAffinityTitle: Virtual Machine Scheduling
-    namespaces:
-      placeholder: e.g. default,system,base
-      label: Namespaces
-    addLabel: Add Workload Selector
-    topologyKey:
-      placeholder: 'topology.kubernetes.io/zone'
-
 typeDescription:
   # Map of
   # type: Description to be shown on the top of list view describing the type.
