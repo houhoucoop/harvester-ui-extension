@@ -1,5 +1,8 @@
 import SteveModel from '@shell/plugins/steve/steve-class';
 import { HCI } from '@shell/config/labels-annotations';
+import { NETWORK_TYPE } from '../config/types';
+
+const { UNTAGGED } = NETWORK_TYPE;
 
 export default class NetworkAttachmentDef extends SteveModel {
   applyDefaults() {
@@ -42,7 +45,7 @@ export default class NetworkAttachmentDef extends SteveModel {
   }
 
   get vlanId() {
-    return this.vlanType === 'UntaggedNetwork' ? 'N/A' : this.parseConfig.vlan;
+    return this.vlanType === UNTAGGED ? 'N/A' : this.parseConfig.vlan;
   }
 
   get customValidationRules() {
@@ -65,7 +68,7 @@ export default class NetworkAttachmentDef extends SteveModel {
     const route = annotations[HCI.NETWORK_ROUTE];
     let config = {};
 
-    if (this.vlanType === 'UntaggedNetwork') {
+    if (this.vlanType === UNTAGGED) {
       return 'N/A';
     }
 
