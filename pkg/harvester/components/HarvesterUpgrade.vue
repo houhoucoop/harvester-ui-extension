@@ -71,6 +71,10 @@ export default {
       return this.$store.getters['harvester/schemaFor'](HCI.UPGRADE_LOG);
     },
 
+    skipSingleReplicaDetachedVolFeatureEnabled() {
+      return this.$store.getters['harvester-common/getFeatureEnabled']('skipSingleReplicaDetachedVol');
+    },
+
     releaseLink() {
       return `https://github.com/harvester/harvester/releases/tag/${ this.version }`;
     }
@@ -107,7 +111,7 @@ export default {
         spec: { version: this.version }
       };
 
-      if (this.skipSingleReplicaDetachedVol) {
+      if (this.skipSingleReplicaDetachedVolFeatureEnabled && this.skipSingleReplicaDetachedVol) {
         upgradeValue.metadata.annotations =
           { [HCI_ANNOTATIONS.SKIP_SINGLE_REPLICA_DETACHED_VOL]: JSON.stringify(this.skipSingleReplicaDetachedVol) };
       }
@@ -198,7 +202,10 @@ export default {
             />
           </div>
 
-          <div class="mb-5">
+          <div
+            v-if="skipSingleReplicaDetachedVolFeatureEnabled"
+            class="mb-5"
+          >
             <Checkbox
               v-model:value="skipSingleReplicaDetachedVol"
               class="check"
