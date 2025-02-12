@@ -49,11 +49,8 @@ const featuresV142 = [
 const featuresV150 = [
   ...featuresV142,
   'tpmPersistentState',
-<<<<<<< HEAD
-  'untaggedNetworkSetting'
-=======
+  'untaggedNetworkSetting',
   'skipSingleReplicaDetachedVol'
->>>>>>> 72c6741 (feat: add feature flag)
 ];
 
 export const RELEASE_FEATURES = {
