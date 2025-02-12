@@ -1422,19 +1422,11 @@ export default {
       }
     },
 
-    setTPM(tpmEnabled) {
+    setTPM({ tpmEnabled = false, tpmPersistentStateEnabled = false } = {}) {
       if (tpmEnabled) {
-        set(this.spec.template.spec.domain.devices, 'tpm', {});
+        set(this.spec.template.spec.domain.devices, 'tpm', tpmPersistentStateEnabled ? { persistent: true } : {});
       } else {
         delete this.spec.template.spec.domain.devices['tpm'];
-      }
-    },
-
-    setTPMPersistentStateEnabled(tpmPersistentStateEnabled) {
-      if (tpmPersistentStateEnabled) {
-        set(this.spec.template.spec.domain.devices, 'tpm', { persistent: true });
-      } else {
-        set(this.spec.template.spec.domain.devices, 'tpm', {});
       }
     },
 
@@ -1568,11 +1560,11 @@ export default {
     },
 
     tpmEnabled(val) {
-      this.setTPM(val);
+      this.setTPM({ tpmEnabled: val, tpmPersistentStateEnabled: this.tpmPersistentStateEnabled });
     },
 
     tpmPersistentStateEnabled(val) {
-      this.setTPMPersistentStateEnabled(val);
+      this.setTPM({ tpmEnabled: this.tpmEnabled, tpmPersistentStateEnabled: val });
     },
 
     installAgent: {
