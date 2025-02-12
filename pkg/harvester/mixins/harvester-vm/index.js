@@ -1392,7 +1392,6 @@ export default {
     setBootMethod(boot = { efi: false, secureBoot: false, efiPersistentStateEnabled: false }) {
       if (boot.efi) {
         set(this.spec.template.spec.domain, 'firmware.bootloader.efi.secureBoot', boot.secureBoot);
-        set(this.spec.template.spec.domain, 'firmware.bootloader.efi.persistent', boot.efiPersistentStateEnabled);
       } else {
         delete this.spec.template.spec.domain['firmware'];
         delete this.spec.template.spec.domain.features['smm'];
@@ -1411,6 +1410,12 @@ export default {
             delete this.spec.template.spec.domain.features['smm'];
           }
         } catch (e) {}
+      }
+
+      if (boot.efiPersistentStateEnabled) {
+        set(this.spec.template.spec.domain, 'firmware.bootloader.efi.persistent', true);
+      } else {
+        delete this.spec.template.spec.domain.firmware.bootloader.efi['persistent'];
       }
     },
 
