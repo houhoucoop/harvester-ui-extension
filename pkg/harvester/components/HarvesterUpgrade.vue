@@ -5,8 +5,10 @@ import { Checkbox } from '@components/Form/Checkbox';
 import ModalWithCard from '@shell/components/ModalWithCard';
 import LabeledSelect from '@shell/components/form/LabeledSelect';
 import { Banner } from '@components/Banner';
+import { HCI as HCI_ANNOTATIONS } from '@pkg/harvester/config/labels-annotations';
 import { HCI } from '../types';
 import UpgradeInfo from './UpgradeInfo';
+
 export default {
   name: 'HarvesterUpgrade',
 
@@ -28,14 +30,15 @@ export default {
 
   data() {
     return {
-      upgrade:          [],
-      upgradeMessage:   [],
-      errors:           '',
-      selectMode:       true,
-      version:          '',
-      enableLogging:    true,
-      readyReleaseNote: false,
-      isOpen:           false
+      upgrade:                      [],
+      upgradeMessage:               [],
+      errors:                       '',
+      selectMode:                   true,
+      version:                      '',
+      enableLogging:                true,
+      skipSingleReplicaDetachedVol: false,
+      readyReleaseNote:             false,
+      isOpen:                       false
     };
   },
 
@@ -66,6 +69,10 @@ export default {
 
     canEnableLogging() {
       return this.$store.getters['harvester/schemaFor'](HCI.UPGRADE_LOG);
+    },
+
+    skipSingleReplicaDetachedVolFeatureEnabled() {
+      return this.$store.getters['harvester-common/getFeatureEnabled']('skipSingleReplicaDetachedVol');
     },
 
     releaseLink() {
@@ -103,6 +110,11 @@ export default {
         },
         spec: { version: this.version }
       };
+
+      if (this.skipSingleReplicaDetachedVolFeatureEnabled && this.skipSingleReplicaDetachedVol) {
+        upgradeValue.metadata.annotations =
+          { [HCI_ANNOTATIONS.SKIP_SINGLE_REPLICA_DETACHED_VOL]: JSON.stringify(this.skipSingleReplicaDetachedVol) };
+      }
 
       if (this.canEnableLogging) {
         upgradeValue.spec.logEnabled = this.enableLogging;
@@ -190,6 +202,21 @@ export default {
             />
           </div>
 
+          <div
+            v-if="skipSingleReplicaDetachedVolFeatureEnabled"
+            class="mb-5"
+          >
+            <Checkbox
+              v-model:value="skipSingleReplicaDetachedVol"
+              class="check"
+              type="checkbox"
+              :label="t('harvester.upgradePage.skipSingleReplicaDetachedVol')"
+            />
+          </div>
+          <hr
+            v-if="version"
+            class="divider"
+          />
           <div v-if="version">
             <p
               v-clean-html="t('harvester.upgradePage.releaseTip', {url: releaseLink}, true)"
