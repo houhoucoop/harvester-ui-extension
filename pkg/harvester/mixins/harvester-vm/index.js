@@ -1389,7 +1389,9 @@ export default {
       }
     },
 
-    setBootMethod(boot = { efi: false, secureBoot: false, efiPersistentStateEnabled: false }) {
+    setBootMethod(boot = {
+      efi: false, secureBoot: false, efiPersistentStateEnabled: false
+    }) {
       if (boot.efi) {
         set(this.spec.template.spec.domain, 'firmware.bootloader.efi.secureBoot', boot.secureBoot);
       } else {
