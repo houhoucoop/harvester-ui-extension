@@ -1179,6 +1179,10 @@ export default class VirtVm extends HarvesterResource {
     return this.$rootGetters['harvester-common/getFeatureEnabled']('tpmPersistentState');
   }
 
+  get efiPersistentStateFeatureEnabled() {
+    return this.$rootGetters['harvester-common/getFeatureEnabled']('efiPersistentState');
+  }
+
   setInstanceLabels(val) {
     if ( !this.spec?.template?.metadata?.labels ) {
       set(this, 'spec.template.metadata.labels', {});

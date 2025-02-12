@@ -165,6 +165,7 @@ export default {
       efiEnabled:                    false,
       tpmEnabled:                    false,
       tpmPersistentStateEnabled:     false,
+      efiPersistentStateEnabled:     false,
       secureBoot:                    false,
       userDataTemplateId:            '',
       saveUserDataAsClearText:       false,
@@ -369,6 +370,7 @@ export default {
       const efiEnabled = this.isEfiEnabled(spec);
       const tpmEnabled = this.isTpmEnabled(spec);
       const tpmPersistentStateEnabled = this.isTPMPersistentStateEnabled(spec);
+      const efiPersistentStateEnabled = this.isEFIPersistentStateEnabled(spec);
       const secureBoot = this.isSecureBoot(spec);
       const cpuPinning = this.isCpuPinning(spec);
 
@@ -400,6 +402,7 @@ export default {
 
       this['installUSBTablet'] = installUSBTablet;
       this['efiEnabled'] = efiEnabled;
+      this['efiPersistentStateEnabled'] = efiPersistentStateEnabled;
       this['tpmEnabled'] = tpmEnabled;
       this['tpmPersistentStateEnabled'] = tpmPersistentStateEnabled;
       this['secureBoot'] = secureBoot;
@@ -1386,13 +1389,20 @@ export default {
       }
     },
 
-    setBootMethod(boot = { efi: false, secureBoot: false }) {
-      if (boot.efi && boot.secureBoot) {
-        set(this.spec.template.spec.domain, 'features.smm.enabled', true);
-        set(this.spec.template.spec.domain, 'firmware.bootloader.efi.secureBoot', true);
-      } else if (boot.efi && !boot.secureBoot) {
-        // set(this.spec.template.spec.domain, 'features.smm.enabled', false);
+    setBootMethod(boot = { efi: false, secureBoot: false, efiPersistentStateEnabled: false }) {
+      if (boot.efi) {
+        set(this.spec.template.spec.domain, 'firmware.bootloader.efi.secureBoot', boot.secureBoot);
+        set(this.spec.template.spec.domain, 'firmware.bootloader.efi.persistent', boot.efiPersistentStateEnabled);
+      } else {
+        delete this.spec.template.spec.domain['firmware'];
+        delete this.spec.template.spec.domain.features['smm'];
 
+        return;
+      }
+
+      if (boot.secureBoot) {
+        set(this.spec.template.spec.domain, 'features.smm.enabled', true);
+      } else {
         try {
           delete this.spec.template.spec.domain.features.smm['enabled'];
           const noKeys = Object.keys(this.spec.template.spec.domain.features.smm).length === 0;
@@ -1401,10 +1411,6 @@ export default {
             delete this.spec.template.spec.domain.features['smm'];
           }
         } catch (e) {}
-        set(this.spec.template.spec.domain, 'firmware.bootloader.efi.secureBoot', false);
-      } else {
-        delete this.spec.template.spec.domain['firmware'];
-        delete this.spec.template.spec.domain.features['smm'];
       }
     },
 
@@ -1540,11 +1546,21 @@ export default {
     },
 
     efiEnabled(val) {
-      this.setBootMethod({ efi: val, secureBoot: this.secureBoot });
+      this.setBootMethod({
+        efi: val, secureBoot: this.secureBoot, efiPersistentStateEnabled: this.efiPersistentStateEnabled
+      });
     },
 
     secureBoot(val) {
-      this.setBootMethod({ efi: this.efiEnabled, secureBoot: val });
+      this.setBootMethod({
+        efi: this.efiEnabled, secureBoot: val, efiPersistentStateEnabled: this.efiPersistentStateEnabled
+      });
+    },
+
+    efiPersistentStateEnabled(val) {
+      this.setBootMethod({
+        efi: this.efiEnabled, secureBoot: this.secureBoot, efiPersistentStateEnabled: val
+      });
     },
 
     cpuPinning(value) {
