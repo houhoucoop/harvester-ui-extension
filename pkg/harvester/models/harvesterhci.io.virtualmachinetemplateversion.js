@@ -280,4 +280,8 @@ export default class HciVmTemplateVersion extends HarvesterResource {
   get tpmPersistentStateFeatureEnabled() {
     return this.$rootGetters['harvester-common/getFeatureEnabled']('tpmPersistentState');
   }
+
+  get efiPersistentStateFeatureEnabled() {
+    return this.$rootGetters['harvester-common/getFeatureEnabled']('efiPersistentState');
+  }
 }

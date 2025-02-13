@@ -144,6 +144,10 @@ export default {
       return !!spec?.template?.spec?.domain?.devices?.tpm?.persistent;
     },
 
+    isEFIPersistentStateEnabled(spec) {
+      return !!spec?.template?.spec?.domain?.firmware?.bootloader?.efi?.persistent;
+    },
+
     isSecureBoot(spec) {
       return !!spec?.template?.spec?.domain?.firmware?.bootloader?.efi?.secureBoot;
     },
