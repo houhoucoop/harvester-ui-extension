@@ -886,7 +886,16 @@ export default {
           v-model:value="efiEnabled"
           class="check"
           type="checkbox"
-          :label="t('harvester.virtualMachine.efiEnabled')"
+          :label="t('harvester.virtualMachine.advancedOptions.efiEnabled')"
+          :mode="mode"
+        />
+
+        <Checkbox
+          v-if="value.efiPersistentStateFeatureEnabled && efiEnabled"
+          v-model:value="efiPersistentStateEnabled"
+          class="check"
+          type="checkbox"
+          :label="t('harvester.virtualMachine.advancedOptions.efiPersistentState')"
           :mode="mode"
         />
 
@@ -895,7 +904,7 @@ export default {
           v-model:value="secureBoot"
           class="check"
           type="checkbox"
-          :label="t('harvester.virtualMachine.secureBoot')"
+          :label="t('harvester.virtualMachine.advancedOptions.secureBoot')"
           :mode="mode"
         />
 
