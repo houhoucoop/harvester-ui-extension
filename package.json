@@ -30,9 +30,7 @@
     "qs": "6.11.1",
     "roarr": "7.0.4",
     "semver": "7.5.4",
-    "@vue/cli-service/html-webpack-plugin": "^5.0.0",
-    "@babel/core": "^7.25.0",
-    "webpack": "^5.0.0"
+    "@vue/cli-service/html-webpack-plugin": "^5.0.0"
   },
   "scripts": {
     "dev": "NODE_ENV=dev ./node_modules/.bin/vue-cli-service serve",
