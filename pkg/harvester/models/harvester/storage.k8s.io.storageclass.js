@@ -62,6 +62,10 @@ export default class HciStorageClass extends StorageClass {
     return this.parameters?.encrypted === 'true';
   }
 
+  get isLonghornV1() {
+    return this.provisioner === LONGHORN_DRIVER && this.longhornVersion === DATA_ENGINE_V1;
+  }
+
   get isLonghornV2() {
     return this.provisioner === LONGHORN_DRIVER && this.longhornVersion === DATA_ENGINE_V2;
   }

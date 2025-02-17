@@ -16,7 +16,6 @@ import { STORAGE_CLASS } from '@shell/config/types';
 import { VM_IMAGE_FILE_FORMAT } from '../validators/vm-image';
 import { OS } from '../mixins/harvester-vm';
 import { HCI } from '../types';
-import { LVM_DRIVER } from '../models/harvester/storage.k8s.io.storageclass';
 
 const ENCRYPT = 'encrypt';
 const DECRYPT = 'decrypt';
@@ -61,8 +60,11 @@ export default {
       images:         this.$store.dispatch(`${ inStore }/findAll`, { type: HCI.IMAGE }),
       storageClasses: this.$store.dispatch(`${ inStore }/findAll`, { type: STORAGE_CLASS }),
     });
+
     this['storageClassName'] = this.storageClassName || this.defaultStorageClassName();
     this.images = this.$store.getters[`${ inStore }/all`](HCI.IMAGE);
+
+    this.storages = this.$store.getters[`${ inStore }/all`](STORAGE_CLASS);
 
     const { securityParameters } = this.value.spec;
 
@@ -98,14 +100,15 @@ export default {
     }
 
     return {
-      selectedImage: null,
-      images:        [],
-      url:           this.value.spec.url,
-      files:         [],
-      resource:      '',
-      headers:       {},
-      fileUrl:       '',
-      file:          '',
+      selectedImage:  null,
+      storageClasses: [],
+      images:         [],
+      url:            this.value.spec.url,
+      files:          [],
+      resource:       '',
+      headers:        {},
+      fileUrl:        '',
+      file:           '',
     };
   },
 
@@ -160,7 +163,7 @@ export default {
       const storages = this.value.spec?.securityParameters?.cryptoOperation === ENCRYPT ? this.encryptedStorageClasses : this.nonEncryptedStorageClasses;
 
       return storages
-        .filter((s) => !s.parameters?.backingImage && s.provisioner !== LVM_DRIVER) // Lvm storage is not supported.
+        .filter((s) => !s.parameters?.backingImage)
         .map((s) => {
           const label = s.isDefault ? `${ s.name } (${ this.t('generic.default') })` : s.name;
 
@@ -178,6 +181,7 @@ export default {
 
       set(nue) {
         this.value.metadata.annotations[HCI_ANNOTATIONS.STORAGE_CLASS] = nue;
+        this.value.spec.targetStorageClassName = nue;
       }
     },
     sourceImageOptions() {
@@ -255,6 +259,13 @@ export default {
         this.storageClassName = this.encryptedStorageClasses[0]?.name || '';
       } else { // URL / FILE / DECRYPT should use default storage class
         this.storageClassName = this.defaultStorageClassName();
+      }
+    },
+    'storageClassName'(neu) {
+      const storageClass = this.storages.find((s) => s.id === neu);
+
+      if (storageClass) {
+        this.value.spec.backend = storageClass.isLonghornV1 ? 'backingimage' : 'cdi';
       }
     }
   },

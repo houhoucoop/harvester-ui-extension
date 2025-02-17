@@ -195,7 +195,12 @@ export default {
 
       return true;
     },
+    isValidationPassed() {
+      // check if any disk hasDiskError is true
+      const hasError = this.diskRows.some((disk) => disk.hasDiskError === true);
 
+      return !hasError;
+    },
     showCpuPinningBanner() {
       if (!this.value.cpuPinningFeatureEnabled) {
         return false;
@@ -489,6 +494,7 @@ export default {
     :resource="value"
     :cancel-event="true"
     :mode="mode"
+    :validation-passed="isValidationPassed"
     :can-yaml="isSingle ? true : false"
     :errors="errors"
     :generate-yaml="generateYaml"

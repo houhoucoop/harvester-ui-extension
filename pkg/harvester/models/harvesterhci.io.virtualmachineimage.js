@@ -199,6 +199,10 @@ export default class HciVmImage extends HarvesterResource {
     return `${ this.metadata.namespace }/${ this.spec.displayName }`;
   }
 
+  get imageStorageClass() {
+    return this?.metadata?.annotations[HCI_ANNOTATIONS.STORAGE_CLASS] || '';
+  }
+
   get imageMessage() {
     if (this.uploadError) {
       return ucFirst(this.uploadError);
@@ -239,8 +243,8 @@ export default class HciVmImage extends HarvesterResource {
     return formatSi(size, {
       increment:    1024,
       maxPrecision: 2,
-      suffix:       'B',
-      firstSuffix:  'B',
+      suffix:       'iB',
+      firstSuffix:  'iB',
     });
   }
 
@@ -254,8 +258,8 @@ export default class HciVmImage extends HarvesterResource {
     return formatSi(virtualSize, {
       increment:    1024,
       maxPrecision: 2,
-      suffix:       'B',
-      firstSuffix:  'B',
+      suffix:       'iB',
+      firstSuffix:  'iB',
     });
   }
 
