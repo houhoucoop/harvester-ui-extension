@@ -46,7 +46,7 @@ jobs:
             git push origin "${{ env.target_branch }}"
           fi
 
-  build-extension-charts:
+    build-extension-charts:
     needs: setup-target-branch
     runs-on: ubuntu-latest
     permissions:
@@ -69,7 +69,7 @@ jobs:
       - name: Run build script
         run: yarn publish-pkgs -s ${{ github.repository }} -b ${{ needs.setup-target-branch.outputs.target_branch }}
       - name: Upload charts artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: charts
           path: tmp
