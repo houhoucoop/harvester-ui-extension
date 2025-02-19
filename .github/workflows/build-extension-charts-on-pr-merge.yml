@@ -60,12 +60,8 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: '${{ needs.setup-target-branch.outputs.target_branch }}'  # Ensures the correct branch is checked out
       - name: Enable Corepack
-        run: |
-          echo "Enabling Corepack"
-          corepack enable
+        run: corepack enable
       - name: Setup Helm
         uses: azure/setup-helm@v3
         with:
@@ -76,13 +72,9 @@ jobs:
           cache: yarn
           node-version-file: '.nvmrc'
       - name: Install dependencies
-        run: |
-          echo "Installing dependencies"
-          yarn
+        run: yarn
       - name: Run build script
-        run: |
-          echo "Running build script"
-          yarn publish-pkgs -s ${{ github.repository }} -b ${{ needs.setup-target-branch.outputs.target_branch }}
+        run: yarn publish-pkgs -s ${{ github.repository }} -b ${{ needs.setup-target-branch.outputs.target_branch }}
       - name: Upload charts artifact
         uses: actions/upload-artifact@v4
         with:
@@ -97,7 +89,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: '${{ needs.setup-target-branch.outputs.target_branch }}'  # Ensures the correct branch is checked out
+          ref: '${{ needs.setup-target-branch.outputs.target_branch }}'
       - name: Configure Git
         run: |
           echo "Configuring Git user"
