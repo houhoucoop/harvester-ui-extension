@@ -101,11 +101,22 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: charts
+      - name: Remove old files
+        run: |
+          echo "Removing old files from the branch"
+          git rm -rf ./{assets,charts,extensions,index.yaml}
+      - name: Get last commit hash
+        id: last_commit
+        run: |
+          echo "Retrieving last commit hash"
+          LAST_COMMIT=$(git log -1 --format=%H)
+          echo "Last commit hash: $LAST_COMMIT"
+          echo "last_commit=$LAST_COMMIT" >> $GITHUB_ENV
       - name: Commit build
         run: |
           echo "Committing build artifacts to branch ${{ needs.setup-target-branch.outputs.target_branch }}"
           git add ./{assets,charts,extensions,index.yaml}
-          git commit -m "CI Build Artifacts"
+          git commit -m "CI Build Artifacts (Last commit: ${{ env.last_commit }})"
           git push origin ${{ needs.setup-target-branch.outputs.target_branch }}
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.4.1
