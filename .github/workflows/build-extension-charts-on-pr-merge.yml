@@ -88,7 +88,6 @@ jobs:
         with:
           name: charts
           path: tmp
-        run: echo "Uploading build artifacts"
 
   release:
     needs: build-extension-charts
@@ -108,7 +107,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: charts
-        run: echo "Downloading build artifact"
       - name: Commit build
         run: |
           echo "Committing build artifacts to branch ${{ needs.setup-target-branch.outputs.target_branch }}"
@@ -122,4 +120,3 @@ jobs:
         env:
           CR_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
           CR_SKIP_EXISTING: true
-        run: echo "Running chart-releaser"
