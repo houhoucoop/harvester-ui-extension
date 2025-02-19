@@ -4,14 +4,13 @@ on:
   push:
     branches:
       - main
-      - 'release-harvester-v*'
       - '*-dev'
   pull_request:
     branches:
       - main
       - 'release-harvester-v*'
       - '*-dev'
-    types: 
+    types:
       - merged
 
 jobs:

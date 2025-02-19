@@ -1,11 +1,10 @@
 name: Tests
 
 on:
-  workflow_call:  # This tells GH that the workflow is reusable 
+  workflow_call:  # This tells GH that the workflow is reusable
   push:
     branches:
       - main
-      - 'release-*'
   pull_request:
     branches:
       - main
