@@ -46,7 +46,7 @@ jobs:
             git push origin "${{ env.target_branch }}"
           fi
 
-    build-extension-charts:
+  build-extension-charts:
     needs: setup-target-branch
     runs-on: ubuntu-latest
     permissions:
