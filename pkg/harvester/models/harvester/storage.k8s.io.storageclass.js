@@ -77,4 +77,8 @@ export default class HciStorageClass extends StorageClass {
   get volumeEncryptionFeatureEnabled() {
     return this.$rootGetters['harvester-common/getFeatureEnabled']('volumeEncryption');
   }
+
+  get thirdPartyStorageFeatureEnabled() {
+    return this.$rootGetters['harvester-common/getFeatureEnabled']('thirdPartyStorage');
+  }
 }
