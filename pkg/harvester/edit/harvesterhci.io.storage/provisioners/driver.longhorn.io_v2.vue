@@ -63,7 +63,7 @@ export default {
         diskSelector:        null,
         nodeSelector:        null,
         encrypted:           'false',
-        migratable:          'false',
+        migratable:          this.value.thirdPartyStorageFeatureEnabled ? 'true' : 'false',
         dataEngine:          DATA_ENGINE_V2
       };
     }
@@ -318,7 +318,7 @@ export default {
         :label="t('harvester.storage.parameters.migratable.label')"
         :mode="mode"
         :options="migratableOptions"
-        :disabled="true"
+        :disabled="!value.thirdPartyStorageFeatureEnabled"
       />
     </div>
     <div class="row mt-20">
