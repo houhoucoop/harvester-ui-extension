@@ -32,18 +32,24 @@ jobs:
       - name: Get the target branch
         id: get-version
         run: |
+          echo "Ref name: ${{ github.ref_name }}"
           if [[ "${{ github.ref_name }}" =~ ^release-harvester-v([0-9]+\.[0-9]+)$ ]]; then
+            echo "Target branch regex matched"
             echo "target_branch=v${BASH_REMATCH[1]}-head" >> "$GITHUB_ENV"
             echo "target_branch=v${BASH_REMATCH[1]}-head" >> "$GITHUB_OUTPUT"
           else
+            echo "Error: Ref name doesn't match the expected pattern"
             exit 1
           fi
       - name: Create target branch if not exists
         run: |
           git fetch --all
           if ! git rev-parse --verify origin/${{ env.target_branch }} > /dev/null 2>&1; then
+            echo "Target branch doesn't exist, creating it"
             git checkout -b "${{ env.target_branch }}"
             git push origin "${{ env.target_branch }}"
+          else
+            echo "Target branch already exists"
           fi
 
   build-extension-charts:
@@ -69,7 +75,7 @@ jobs:
       - name: Run build script
         run: yarn publish-pkgs -s ${{ github.repository }} -b ${{ needs.setup-target-branch.outputs.target_branch }}
       - name: Upload charts artifact
-        uses: actions/upload-artifact@v4  # Updated to v4
+        uses: actions/upload-artifact@v4
         with:
           name: charts
           path: tmp
@@ -88,7 +94,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
       - name: Download build artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: charts
       - name: Commit build
