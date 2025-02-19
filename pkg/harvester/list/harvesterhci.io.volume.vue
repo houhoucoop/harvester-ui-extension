@@ -95,7 +95,8 @@ export default {
         {
           name:     'storageClass',
           labelKey: 'tableHeaders.storageClass',
-          value:    'spec.storageClassName'
+          value:    'spec.storageClassName',
+          sort:     'spec.storageClassName'
         },
         {
           name:     'AttachedVM',
