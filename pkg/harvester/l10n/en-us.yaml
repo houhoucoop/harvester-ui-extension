@@ -630,6 +630,7 @@ harvester:
       setFirst: Set as root volume
       saveVolume: Update Volume
       encryption: Encryption
+      vmImageVolumeTip: Disk size ({diskSize}) should greater than selected image virtual size ({imageVirtualSize})
       lockTooltip:
         all: All volumes are encrypted.
         partial: Some volumes are encrypted.

@@ -88,3 +88,13 @@ export const MACHINE_POOLS = {
   align:    'center',
   width:    100,
 };
+
+// The STORAGE_CLASS column in VM image list page
+export const IMAGE_STORAGE_CLASS = {
+  name:     'imageStorageClass',
+  labelKey: 'harvester.tableHeaders.storageClass',
+  sort:     'imageStorageClass',
+  value:    'imageStorageClass',
+  align:    'left',
+  width:    200,
+};
