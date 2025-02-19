@@ -23,10 +23,9 @@ import Tags from '../../components/DiskTags';
 import { DATA_ENGINE_V1, DATA_ENGINE_V2 } from '../../models/harvester/persistentvolumeclaim';
 import { LVM_DRIVER } from '../../models/harvester/storage.k8s.io.storageclass';
 
-const LONGHORN_V2_DATA_ENGINE = 'longhorn-system/v2-data-engine';
-
 export const LVM_TOPOLOGY_LABEL = 'topology.lvm.csi/node';
 
+const LONGHORN_V2_DATA_ENGINE = 'longhorn-system/v2-data-engine';
 const VOLUME_BINDING_MODE_IMMEDIATE = 'Immediate';
 const VOLUME_BINDING_MODE_WAIT = 'WaitForFirstConsumer';
 
