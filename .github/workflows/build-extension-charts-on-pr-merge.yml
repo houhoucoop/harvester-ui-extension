@@ -101,11 +101,11 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: charts
-      - name: Extract version from new build
+      - name: Extract version from package.json
         id: get_version
         run: |
-          VERSION=$(ls assets/harvester/harvester-*.tgz | sed -E 's|.*harvester-([0-9.]+)\.tgz|\1|')
-          echo "Found version: $VERSION"
+          VERSION=$(jq -r '.version' package.json)
+          echo "Extracted version: $VERSION"
           echo "VERSION=$VERSION" >> $GITHUB_ENV
       - name: Remove previous build
         run: |
@@ -113,7 +113,7 @@ jobs:
           rm -rf assets/harvester/harvester-${{ env.VERSION }}.tgz
           rm -rf charts/harvester/${{ env.VERSION }}/
           rm -rf extensions/harvester/${{ env.VERSION }}/
-          rm -f index.yaml
+          rm -f index.yaml  # Remove index.yaml from root
       - name: Get last commit hash
         id: last_commit
         run: |
