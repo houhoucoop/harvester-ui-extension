@@ -51,7 +51,8 @@ const featuresV150 = [
   'tpmPersistentState',
   'efiPersistentState',
   'untaggedNetworkSetting',
-  'skipSingleReplicaDetachedVol'
+  'skipSingleReplicaDetachedVol',
+  'thirdPartyStorage'
 ];
 
 export const RELEASE_FEATURES = {

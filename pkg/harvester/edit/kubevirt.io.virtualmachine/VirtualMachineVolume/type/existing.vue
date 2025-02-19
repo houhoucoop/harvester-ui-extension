@@ -109,6 +109,10 @@ export default {
               return false;
             }
 
+            if (pvc.metadata?.annotations?.[HCI_ANNOTATIONS.GOLDEN_IMAGE] === 'true') {
+              return false;
+            }
+
             if (pvc.attachVM && isAvailable && pvc.attachVM?.id === this.vm?.id && this.isEdit) {
               isBeingUsed = false;
             } else if (pvc.attachVM) {

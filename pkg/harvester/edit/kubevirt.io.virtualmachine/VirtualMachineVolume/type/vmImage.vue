@@ -90,7 +90,7 @@ export default {
     imagesOption() {
       return this.images.filter((c) => c.isReady).sort((a, b) => a.creationTimestamp > b.creationTimestamp ? -1 : 1).map( (I) => {
         return {
-          label: `${ I.metadata.namespace }/${ I.spec.displayName }`,
+          label: this.imageOptionLabel(I),
           value: I.id
         };
       });
@@ -116,8 +116,42 @@ export default {
       });
     },
 
+    thirdPartyStorageEnabled() {
+      return this.$store.getters['harvester-common/getFeatureEnabled']('thirdPartyStorage');
+    },
+
     isLonghornV2() {
       return this.value.pvc?.isLonghornV2 || this.value.pvc?.storageClass?.isLonghornV2;
+    },
+
+    selectedImage() {
+      return this.$store.getters['harvester/all'](HCI.IMAGE)?.find( (I) => this.value.image === I.id);
+    },
+
+    imageVirtualSize() {
+      return this.selectedImage?.virtualSize;
+    },
+
+    diskSize() {
+      const size = this.value?.size || '0';
+
+      return `${ size.replace('Gi', '') } GB`;
+    },
+
+    imageVirtualSizeInByte() {
+      return Math.max(this.selectedImage?.status?.size, this.selectedImage?.status?.virtualSize);
+    },
+
+    diskSizeInByte() {
+      return parseSi(this.value?.size || '0');
+    },
+
+    showDiskTooSmallError() {
+      if (!this.thirdPartyStorageEnabled ) {
+        return false;
+      }
+
+      return this.imageVirtualSizeInByte > this.diskSizeInByte;
     }
   },
 
@@ -158,7 +192,17 @@ export default {
   },
 
   methods: {
+    imageOptionLabel(image) {
+      let label = `${ image.metadata.namespace }/${ image.spec.displayName }`;
+
+      if (this.thirdPartyStorageEnabled) {
+        label += ` (${ image.imageStorageClass } / ${ image.virtualSize })`;
+      }
+
+      return label;
+    },
     update() {
+      this.value.hasDiskError = this.showDiskTooSmallError;
       this.$emit('update');
     },
 
@@ -340,6 +384,11 @@ export default {
       color="error"
       class="mb-20"
       :label="value.volumeBackups.error.message"
+    />
+    <Banner
+      v-if="!isView && showDiskTooSmallError"
+      color="error"
+      :label="t('harvester.virtualMachine.volume.vmImageVolumeTip', {diskSize: diskSize, imageVirtualSize: imageVirtualSize})"
     />
   </div>
 </template>

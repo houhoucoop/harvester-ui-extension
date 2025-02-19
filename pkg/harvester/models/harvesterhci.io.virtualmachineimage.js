@@ -199,6 +199,10 @@ export default class HciVmImage extends HarvesterResource {
     return `${ this.metadata.namespace }/${ this.spec.displayName }`;
   }
 
+  get imageStorageClass() {
+    return this?.metadata?.annotations[HCI_ANNOTATIONS.STORAGE_CLASS] || '';
+  }
+
   get imageMessage() {
     if (this.uploadError) {
       return ucFirst(this.uploadError);
@@ -383,6 +387,10 @@ export default class HciVmImage extends HarvesterResource {
 
   get volumeEncryptionFeatureEnabled() {
     return this.$rootGetters['harvester-common/getFeatureEnabled']('volumeEncryption');
+  }
+
+  get thirdPartyStorageFeatureEnabled() {
+    return this.$rootGetters['harvester-common/getFeatureEnabled']('thirdPartyStorage');
   }
 
   download() {

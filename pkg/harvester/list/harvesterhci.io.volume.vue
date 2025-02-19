@@ -9,6 +9,7 @@ import HarvesterVolumeState from '../formatters/HarvesterVolumeState';
 
 import { allSettled } from '../utils/promise';
 import { HCI, VOLUME_SNAPSHOT } from '../types';
+import { HCI as HCI_ANNOTATIONS } from '@pkg/harvester/config/labels-annotations';
 
 const schema = {
   id:         HCI.VOLUME,
@@ -58,8 +59,10 @@ export default {
     if (!pvcSchema?.collectionMethods.find((x) => x.toLowerCase() === 'post')) {
       this.$store.dispatch('type-map/configureType', { match: HCI.VOLUME, isCreatable: false });
     }
+    // we only show the non golden image PVCs in the list
+    const pvcs = hash.pvcs.filter((pvc) => pvc.metadata.annotations[HCI_ANNOTATIONS.GOLDEN_IMAGE] !== 'true');
 
-    this.rows = hash.pvcs;
+    this.rows = pvcs;
   },
 
   data() {
@@ -92,7 +95,8 @@ export default {
         {
           name:     'storageClass',
           labelKey: 'tableHeaders.storageClass',
-          value:    'spec.storageClassName'
+          value:    'spec.storageClassName',
+          sort:     'spec.storageClassName'
         },
         {
           name:     'AttachedVM',
