@@ -4,11 +4,6 @@ on:
   workflow_dispatch:
   release:
     types: [released]
-  pull_request:
-    branches:
-      - "release-harvester-v*"
-    types:
-      - merged
 
 defaults:
   run:

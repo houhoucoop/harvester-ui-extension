@@ -1,6 +1,9 @@
 name: Build and Push Extension Charts on PR Merge
 
 on:
+  push:
+    branches:
+      - 'release-harvester-v*'
   pull_request:
     branches:
       - 'release-harvester-v*'
@@ -22,46 +25,3 @@ jobs:
 
       - name: Run tests
         uses: ./.github/actions/lint
-
-  build-extension-charts:
-    needs:
-      - lint
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-
-      - name: Get the target branch
-        id: version
-        run: |
-          branch_name="${{ github.head_ref }}"
-          version=$(echo $branch_name | sed -E 's/release-harvester-v([0-9]+\.[0-9]+)/\1/')
-          target_branch="v${{ version }}-head"
-          echo "target_branch=$target_branch" >> $GITHUB_ENV
-          echo "version=$version" >> $GITHUB_ENV
-
-      - name: Create target branch
-        run: |
-          git fetch --all
-          git checkout gh-pages
-
-          # Check if the branch exists, if not, create it
-          if git rev-parse --verify origin/${{ env.target_branch }} > /dev/null 2>&1; then
-            echo "Branch ${{ env.target_branch }} already exists"
-          else
-            echo "Creating target branch ${{ env.target_branch }}"
-            git checkout -b ${{ env.target_branch }}
-            git push origin ${{ env.target_branch }}
-          fi
-
-      - name: Build and push extension charts
-        uses: rancher/dashboard/.github/workflows/build-extension-charts.yml@master
-        permissions:
-          actions: write
-          contents: write
-          deployments: write
-          pages: write
-        with:
-          target_branch: ${{ env.target_branch }}
