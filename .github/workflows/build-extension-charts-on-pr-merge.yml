@@ -69,6 +69,7 @@ jobs:
     uses: rancher/dashboard/.github/workflows/build-extension-charts.yml@master
     with:
       target_branch: ${{ needs.setup-target-branch.outputs.target_branch }}
+      tagged_release: false
     permissions:
       actions: write
       contents: write
