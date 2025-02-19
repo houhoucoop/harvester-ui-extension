@@ -77,6 +77,7 @@ jobs:
     with:
       target_branch: ${{ needs.setup-target-branch.outputs.target_branch }}
       tagged_release: false
+      is_test: true
     permissions:
       actions: write
       contents: write
