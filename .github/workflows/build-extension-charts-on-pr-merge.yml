@@ -101,10 +101,19 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: charts
-      - name: Remove old files
+      - name: Extract version from new build
+        id: get_version
         run: |
-          echo "Removing old files from the branch"
-          git rm -rf ./{assets,charts,extensions,index.yaml}
+          VERSION=$(ls assets/harvester/harvester-*.tgz | sed -E 's|.*harvester-([0-9.]+)\.tgz|\1|')
+          echo "Found version: $VERSION"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+      - name: Remove previous build
+        run: |
+          echo "Removing previous build for version ${{ env.VERSION }}"
+          rm -rf assets/harvester/harvester-${{ env.VERSION }}.tgz
+          rm -rf charts/harvester/${{ env.VERSION }}/
+          rm -rf extensions/harvester/${{ env.VERSION }}/
+          rm -f index.yaml
       - name: Get last commit hash
         id: last_commit
         run: |
@@ -116,7 +125,7 @@ jobs:
         run: |
           echo "Committing build artifacts to branch ${{ needs.setup-target-branch.outputs.target_branch }}"
           git add ./{assets,charts,extensions,index.yaml}
-          git commit -m "CI Build Artifacts (Last commit: ${{ env.last_commit }})"
+          git commit -m "CI Build Artifacts (Last commit: ${{ env.last_commit }}, Version: ${{ env.VERSION }})"
           git push origin ${{ needs.setup-target-branch.outputs.target_branch }}
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.4.1
