@@ -90,6 +90,14 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+      - name: Extract version from package.json
+        id: get_version
+        run: |
+          VERSION=$(jq -r '.version' release-harvester-v1.5/package.json)
+          echo "Extracted version: $VERSION"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+      - name: Checkout target branch
+        uses: actions/checkout@v4
         with:
           ref: '${{ needs.setup-target-branch.outputs.target_branch }}'
       - name: Configure Git
@@ -101,12 +109,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: charts
-      - name: Extract version from package.json
-        id: get_version
-        run: |
-          VERSION=$(jq -r '.version' package.json)
-          echo "Extracted version: $VERSION"
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
       - name: Remove previous build
         run: |
           echo "Removing previous build for version ${{ env.VERSION }}"
