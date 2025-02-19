@@ -93,7 +93,7 @@ jobs:
       - name: Extract version from package.json
         id: get_version
         run: |
-          VERSION=$(jq -r '.version' release-harvester-v1.5/package.json)
+          VERSION=$(jq -r '.version' package.json)
           echo "Extracted version: $VERSION"
           echo "VERSION=$VERSION" >> $GITHUB_ENV
       - name: Checkout target branch
