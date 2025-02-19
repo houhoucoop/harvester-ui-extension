@@ -96,6 +96,13 @@ jobs:
           VERSION=$(jq -r '.version' package.json)
           echo "Extracted version: $VERSION"
           echo "VERSION=$VERSION" >> $GITHUB_ENV
+      - name: Get last commit hash from release-harvester-v1.5
+        id: last_commit
+        run: |
+          echo "Retrieving last commit hash"
+          LAST_COMMIT=$(git log -1 --format=%H)
+          echo "Last commit hash: $LAST_COMMIT"
+          echo "last_commit=$LAST_COMMIT" >> $GITHUB_ENV
       - name: Checkout target branch
         uses: actions/checkout@v4
         with:
@@ -116,13 +123,6 @@ jobs:
           rm -rf charts/harvester/${{ env.VERSION }}/
           rm -rf extensions/harvester/${{ env.VERSION }}/
           rm -f index.yaml  # Remove index.yaml from root
-      - name: Get last commit hash
-        id: last_commit
-        run: |
-          echo "Retrieving last commit hash"
-          LAST_COMMIT=$(git log -1 --format=%H)
-          echo "Last commit hash: $LAST_COMMIT"
-          echo "last_commit=$LAST_COMMIT" >> $GITHUB_ENV
       - name: Commit build
         run: |
           echo "Committing build artifacts to branch ${{ needs.setup-target-branch.outputs.target_branch }}"
