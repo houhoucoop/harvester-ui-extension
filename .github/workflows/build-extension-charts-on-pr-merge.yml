@@ -82,9 +82,9 @@ jobs:
           path: tmp
 
   release:
-  needs:
-    - setup-target-branch
-    - build-extension-charts
+    needs:
+      - setup-target-branch
+      - build-extension-charts
     runs-on: ubuntu-latest
     permissions:
       contents: write
