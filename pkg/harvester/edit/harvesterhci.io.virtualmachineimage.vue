@@ -16,6 +16,7 @@ import { STORAGE_CLASS } from '@shell/config/types';
 import { VM_IMAGE_FILE_FORMAT } from '../validators/vm-image';
 import { OS } from '../mixins/harvester-vm';
 import { HCI } from '../types';
+import { LVM_DRIVER } from '../models/harvester/storage.k8s.io.storageclass';
 
 const ENCRYPT = 'encrypt';
 const DECRYPT = 'decrypt';
@@ -161,9 +162,10 @@ export default {
 
     storageClassOptions() {
       const storages = this.value.spec?.securityParameters?.cryptoOperation === ENCRYPT ? this.encryptedStorageClasses : this.nonEncryptedStorageClasses;
+      const filteredStorages = this.value.thirdPartyStorageFeatureEnabled ? storages.filter((s) => !s.parameters?.backingImage) : storages
+        .filter((s) => !s.parameters?.backingImage && s.provisioner !== LVM_DRIVER) ;
 
-      return storages
-        .filter((s) => !s.parameters?.backingImage)
+      return filteredStorages
         .map((s) => {
           const label = s.isDefault ? `${ s.name } (${ this.t('generic.default') })` : s.name;
 
@@ -181,7 +183,9 @@ export default {
 
       set(nue) {
         this.value.metadata.annotations[HCI_ANNOTATIONS.STORAGE_CLASS] = nue;
-        this.value.spec.targetStorageClassName = nue;
+        if (this.value.thirdPartyStorageFeatureEnabled) {
+          this.value.spec.targetStorageClassName = nue;
+        }
       }
     },
     sourceImageOptions() {
@@ -264,7 +268,7 @@ export default {
     'storageClassName'(neu) {
       const storageClass = this.storages.find((s) => s.id === neu);
 
-      if (storageClass) {
+      if (storageClass && this.value.thirdPartyStorageFeatureEnabled) {
         this.value.spec.backend = storageClass.isLonghornV1 ? 'backingimage' : 'cdi';
       }
     }

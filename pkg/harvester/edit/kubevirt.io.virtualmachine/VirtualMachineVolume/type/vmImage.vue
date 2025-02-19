@@ -90,7 +90,7 @@ export default {
     imagesOption() {
       return this.images.filter((c) => c.isReady).sort((a, b) => a.creationTimestamp > b.creationTimestamp ? -1 : 1).map( (I) => {
         return {
-          label: `${ I.metadata.namespace }/${ I.spec.displayName }  (${ I.imageStorageClass } / ${ I.virtualSize })`,
+          label: this.imageOptionLabel(I),
           value: I.id
         };
       });
@@ -116,6 +116,10 @@ export default {
       });
     },
 
+    thirdPartyStorageEnabled() {
+      return this.$store.getters['harvester-common/getFeatureEnabled']('thirdPartyStorage');
+    },
+
     isLonghornV2() {
       return this.value.pvc?.isLonghornV2 || this.value.pvc?.storageClass?.isLonghornV2;
     },
@@ -131,7 +135,7 @@ export default {
     diskSize() {
       const size = this.value?.size || '0';
 
-      return `${ size.replace('Gi', '') } GiB`;
+      return `${ size.replace('Gi', '') } GB`;
     },
 
     imageVirtualSizeInByte() {
@@ -143,6 +147,10 @@ export default {
     },
 
     showDiskTooSmallError() {
+      if (!this.thirdPartyStorageEnabled ) {
+        return false;
+      }
+
       return this.imageVirtualSizeInByte > this.diskSizeInByte;
     }
   },
@@ -184,6 +192,15 @@ export default {
   },
 
   methods: {
+    imageOptionLabel(image) {
+      let label = `${ image.metadata.namespace }/${ image.spec.displayName }`;
+
+      if (this.thirdPartyStorageEnabled) {
+        label += ` (${ image.imageStorageClass } / ${ image.virtualSize })`;
+      }
+
+      return label;
+    },
     update() {
       this.value.hasDiskError = this.showDiskTooSmallError;
       this.$emit('update');

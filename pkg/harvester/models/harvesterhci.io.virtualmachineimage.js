@@ -243,8 +243,8 @@ export default class HciVmImage extends HarvesterResource {
     return formatSi(size, {
       increment:    1024,
       maxPrecision: 2,
-      suffix:       'iB',
-      firstSuffix:  'iB',
+      suffix:       'B',
+      firstSuffix:  'B',
     });
   }
 
@@ -258,8 +258,8 @@ export default class HciVmImage extends HarvesterResource {
     return formatSi(virtualSize, {
       increment:    1024,
       maxPrecision: 2,
-      suffix:       'iB',
-      firstSuffix:  'iB',
+      suffix:       'B',
+      firstSuffix:  'B',
     });
   }
 
@@ -387,6 +387,10 @@ export default class HciVmImage extends HarvesterResource {
 
   get volumeEncryptionFeatureEnabled() {
     return this.$rootGetters['harvester-common/getFeatureEnabled']('volumeEncryption');
+  }
+
+  get thirdPartyStorageFeatureEnabled() {
+    return this.$rootGetters['harvester-common/getFeatureEnabled']('thirdPartyStorage');
   }
 
   download() {
