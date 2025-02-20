@@ -93,10 +93,10 @@ jobs:
       - name: Extract version from package.json
         id: get_version
         run: |
-          VERSION=$(jq -r '.version' package.json)
+          VERSION=$(jq -r '.version' ./pkg/harvester/package.json)
           echo "Extracted version: $VERSION"
           echo "VERSION=$VERSION" >> $GITHUB_ENV
-      - name: Get last commit hash from release-harvester-v1.5
+      - name: Get last commit hash from release branch
         id: last_commit
         run: |
           echo "Retrieving last commit hash"
