@@ -1,26 +1,20 @@
-name: Build and push extension charts on PR merge
+name: Build and Release Extension Charts on PR Merge
 
 on:
-  push:
-    branches:
-      - 'release-harvester-v*'
   pull_request:
     branches:
       - 'release-harvester-v*'
     types:
       - merged
 
-defaults:
-  run:
-    shell: bash
-    working-directory: ./
-
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Run tests
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run linting
         uses: ./.github/actions/lint
 
   setup-target-branch:
@@ -28,29 +22,25 @@ jobs:
     outputs:
       target_branch: ${{ steps.get-version.outputs.target_branch }}
     steps:
-      - uses: actions/checkout@v4
-      - name: Get the target branch
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Determine target branch
         id: get-version
         run: |
-          echo "Ref name: ${{ github.ref_name }}"
           if [[ "${{ github.ref_name }}" =~ ^release-harvester-v([0-9]+\.[0-9]+)$ ]]; then
-            echo "Target branch regex matched"
-            echo "target_branch=v${BASH_REMATCH[1]}-head" >> "$GITHUB_ENV"
-            echo "target_branch=v${BASH_REMATCH[1]}-head" >> "$GITHUB_OUTPUT"
+            TARGET_BRANCH="v${BASH_REMATCH[1]}-head"
+            echo "target_branch=${TARGET_BRANCH}" | tee -a "$GITHUB_ENV" "$GITHUB_OUTPUT"
           else
-            echo "Error: Ref name doesn't match the expected pattern"
-            exit 1
+            echo "Error: invalid branch format." && exit 1
           fi
-      - name: Create target branch if not exists
+
+      - name: Ensure target branch exists
         run: |
-          echo "Checking if target branch exists: ${{ env.target_branch }}"
           git fetch --all
-          if ! git rev-parse --verify origin/${{ env.target_branch }} > /dev/null 2>&1; then
-            echo "Target branch doesn't exist, creating it"
+          if ! git ls-remote --exit-code --heads origin "${{ env.target_branch }}"; then
             git checkout -b "${{ env.target_branch }}"
             git push origin "${{ env.target_branch }}"
-          else
-            echo "Target branch already exists"
           fi
 
   build-extension-charts:
@@ -59,22 +49,22 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
-      - name: Enable Corepack
-        run: corepack enable
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup environment
+        run: |
+          corepack enable
+          yarn install --frozen-lockfile
+
       - name: Setup Helm
         uses: azure/setup-helm@v3
         with:
           version: v3.8.0
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          cache: yarn
-          node-version-file: '.nvmrc'
-      - name: Install dependencies
-        run: yarn
-      - name: Run build script
+
+      - name: Build Helm charts
         run: yarn publish-pkgs -s ${{ github.repository }} -b ${{ needs.setup-target-branch.outputs.target_branch }}
+
       - name: Upload charts artifact
         uses: actions/upload-artifact@v4
         with:
@@ -93,52 +83,50 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: '${{ github.ref_name }}'
+
       - name: Extract version from package.json
         id: get_version
         run: |
           VERSION=$(jq -r '.version' pkg/harvester/package.json)
-          echo "Extracted version: $VERSION"
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-      - name: Get last commit hash from release branch
+          echo "VERSION=${VERSION}" | tee -a "$GITHUB_ENV"
+
+      - name: Get last commit hash
         id: last_commit
         run: |
-          echo "Retrieving last commit hash from release branch"
           LAST_COMMIT=$(git rev-parse HEAD)
-          echo "Last commit hash: $LAST_COMMIT"
-          echo "LAST_COMMIT=$LAST_COMMIT" >> $GITHUB_ENV
+          echo "LAST_COMMIT=${LAST_COMMIT}" | tee -a "$GITHUB_ENV"
+
       - name: Checkout target branch
         uses: actions/checkout@v4
         with:
           ref: '${{ needs.setup-target-branch.outputs.target_branch }}'
-      - name: Remove previous build
+
+      - name: Remove old artifacts
         run: |
-          echo "Removing previous build for version ${{ env.VERSION }}"
-          rm -f index.yaml
           rm -rf extensions/harvester/${{ env.VERSION }}
           rm -rf charts/harvester/${{ env.VERSION }}
-          rm -f assets/index.yaml
           rm -f assets/harvester/harvester-${{ env.VERSION }}.tgz
+
       - name: Configure Git
         run: |
-          echo "Configuring Git user"
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
-      - name: Download build artifact
+
+      - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
           name: charts
-      - name: Verify downloaded files
-        run: ls -R
-      - name: Commit build
+
+      - name: Commit and push artifacts
         run: |
-          echo "Committing build artifacts to branch ${{ needs.setup-target-branch.outputs.target_branch }}"
           git add ./{assets,charts,extensions,index.yaml}
-          git commit -m "CI Build Artifacts (Last commit: ${{ env.LAST_COMMIT }}, Version: ${{ env.VERSION }})"
+          git commit -m "CI Build Artifacts (Commit: ${{ env.LAST_COMMIT }}, Version: ${{ env.VERSION }})"
           git push origin ${{ needs.setup-target-branch.outputs.target_branch }}
-      - name: Run chart-releaser
+
+      - name: Run Helm chart releaser
         uses: helm/chart-releaser-action@v1.4.1
         with:
-          charts_dir: ./charts/*
+          charts_dir: ./charts
         env:
           CR_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
           CR_SKIP_EXISTING: true
