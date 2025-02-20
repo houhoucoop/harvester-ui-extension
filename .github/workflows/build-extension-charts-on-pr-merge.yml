@@ -89,20 +89,23 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout release branch
+        uses: actions/checkout@v4
+        with:
+          ref: '${{ github.ref_name }}'
       - name: Extract version from package.json
         id: get_version
         run: |
-          VERSION=$(jq -r '.version' ./pkg/harvester/package.json)
+          VERSION=$(jq -r '.version' pkg/harvester/package.json)
           echo "Extracted version: $VERSION"
           echo "VERSION=$VERSION" >> $GITHUB_ENV
       - name: Get last commit hash from release branch
         id: last_commit
         run: |
-          echo "Retrieving last commit hash"
-          LAST_COMMIT=$(git log -1 --format=%H)
+          echo "Retrieving last commit hash from release branch"
+          LAST_COMMIT=$(git rev-parse HEAD)
           echo "Last commit hash: $LAST_COMMIT"
-          echo "last_commit=$LAST_COMMIT" >> $GITHUB_ENV
+          echo "LAST_COMMIT=$LAST_COMMIT" >> $GITHUB_ENV
       - name: Checkout target branch
         uses: actions/checkout@v4
         with:
@@ -111,9 +114,9 @@ jobs:
         run: |
           echo "Removing previous build for version ${{ env.VERSION }}"
           rm -rf assets/harvester/harvester-${{ env.VERSION }}.tgz
-          rm -rf charts/harvester/${{ env.VERSION }}/
-          rm -rf extensions/harvester/${{ env.VERSION }}/
-          rm -rf index.yaml
+          rm -rf charts/harvester/${{ env.VERSION }}
+          rm -rf extensions/harvester/${{ env.VERSION }}
+          rm -f index.yaml
       - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
@@ -126,8 +129,8 @@ jobs:
       - name: Commit build
         run: |
           echo "Committing build artifacts to branch ${{ needs.setup-target-branch.outputs.target_branch }}"
-          git add ./{assets,charts,extensions,index.yaml}
-          git commit -m "CI Build Artifacts (Last commit: ${{ env.last_commit }}, Version: ${{ env.VERSION }})"
+          git add assets charts extensions index.yaml
+          git commit -m "CI Build Artifacts (Last commit: ${{ env.LAST_COMMIT }}, Version: ${{ env.VERSION }})"
           git push origin ${{ needs.setup-target-branch.outputs.target_branch }}
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.4.1
