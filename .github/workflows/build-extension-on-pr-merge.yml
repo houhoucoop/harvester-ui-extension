@@ -118,21 +118,21 @@ jobs:
           rm -rf charts/harvester/${{ env.VERSION }}
           rm -f assets/index.yaml
           rm -f assets/harvester/harvester-${{ env.VERSION }}.tgz
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          path: .
-      - name: Verify downloaded files
-        run: ls -R
       - name: Configure Git
         run: |
           echo "Configuring Git user"
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: charts
+      - name: Verify downloaded files
+        run: ls -R
       - name: Commit build
         run: |
           echo "Committing build artifacts to branch ${{ needs.setup-target-branch.outputs.target_branch }}"
-          git add .
+          git add ./{assets,charts,extensions,index.yaml}
           git commit -m "CI Build Artifacts (Last commit: ${{ env.LAST_COMMIT }}, Version: ${{ env.VERSION }})"
           git push origin ${{ needs.setup-target-branch.outputs.target_branch }}
       - name: Run chart-releaser
