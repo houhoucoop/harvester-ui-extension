@@ -1,4 +1,4 @@
-name: Build and Push Extension Charts on PR Merge
+name: Build and push extension charts on PR merge
 
 on:
   push:
@@ -113,14 +113,17 @@ jobs:
       - name: Remove previous build
         run: |
           echo "Removing previous build for version ${{ env.VERSION }}"
-          rm -rf assets/harvester/harvester-${{ env.VERSION }}.tgz
-          rm -rf charts/harvester/${{ env.VERSION }}
-          rm -rf extensions/harvester/${{ env.VERSION }}
           rm -f index.yaml
+          rm -rf extensions/harvester/${{ env.VERSION }}
+          rm -rf charts/harvester/${{ env.VERSION }}
+          rm -f assets/index.yaml
+          rm -f assets/harvester/harvester-${{ env.VERSION }}.tgz
       - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
-          name: charts
+          path: .
+      - name: Verify downloaded files
+        run: ls -R
       - name: Configure Git
         run: |
           echo "Configuring Git user"
@@ -129,7 +132,7 @@ jobs:
       - name: Commit build
         run: |
           echo "Committing build artifacts to branch ${{ needs.setup-target-branch.outputs.target_branch }}"
-          git add assets charts extensions index.yaml
+          git add .
           git commit -m "CI Build Artifacts (Last commit: ${{ env.LAST_COMMIT }}, Version: ${{ env.VERSION }})"
           git push origin ${{ needs.setup-target-branch.outputs.target_branch }}
       - name: Run chart-releaser
