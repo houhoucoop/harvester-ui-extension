@@ -107,22 +107,22 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: '${{ needs.setup-target-branch.outputs.target_branch }}'
-      - name: Configure Git
-        run: |
-          echo "Configuring Git user"
-          git config user.name 'github-actions[bot]'
-          git config user.email 'github-actions[bot]@users.noreply.github.com'
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: charts
       - name: Remove previous build
         run: |
           echo "Removing previous build for version ${{ env.VERSION }}"
           rm -rf assets/harvester/harvester-${{ env.VERSION }}.tgz
           rm -rf charts/harvester/${{ env.VERSION }}/
           rm -rf extensions/harvester/${{ env.VERSION }}/
-          rm -f index.yaml  # Remove index.yaml from root
+          rm -rf index.yaml
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: charts
+      - name: Configure Git
+        run: |
+          echo "Configuring Git user"
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
       - name: Commit build
         run: |
           echo "Committing build artifacts to branch ${{ needs.setup-target-branch.outputs.target_branch }}"
