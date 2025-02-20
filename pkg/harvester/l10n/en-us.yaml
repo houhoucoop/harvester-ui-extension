@@ -365,7 +365,7 @@ harvester:
 
   dashboard:
     label: Dashboard
-    header: "Harvester Cluster (CI test 2): {cluster}"
+    header: "Harvester Cluster (CI test 3): {cluster}"
     hardwareResourceGauge:
       cpu: CPU
       memory: Memory
