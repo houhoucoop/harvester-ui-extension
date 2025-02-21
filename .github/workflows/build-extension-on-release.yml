@@ -3,7 +3,7 @@ name: Build and Release Extension Charts on Release
 on:
   workflow_dispatch:
   release:
-    types: [released]
+    types: [published]
 
 defaults:
   run:
@@ -20,9 +20,30 @@ jobs:
 
       - name: Run tests
         uses: ./.github/actions/lint
+
+  # validate release version, allows vX.Y.Z or vX.Y.Z-rcX, ignores vX.Y.Z-dev-YYYYMMDD
+  filter-release:
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.check-version.outputs.should_run }}
+    steps:
+      - name: Check Release Version
+        id: check-version
+        run: |
+          TAG_NAME="${{ github.event.release.tag_name }}"
+          if [[ "$TAG_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-rc[0-9]+)?$ ]]; then
+            echo "should_run=true" >> $GITHUB_ENV
+            echo "should_run=true" >> $GITHUB_OUTPUT
+          else
+            echo "Ignoring pre-release: $TAG_NAME"
+            echo "should_run=false" >> $GITHUB_ENV
+            echo "should_run=false" >> $GITHUB_OUTPUT
+
   build-extension-charts:
     needs:
       - lint
+      - filter-release
+    if: needs.filter-release.outputs.should_run == 'true' # only run for valid releases
     uses: rancher/dashboard/.github/workflows/build-extension-charts.yml@master
     permissions:
       actions: write
