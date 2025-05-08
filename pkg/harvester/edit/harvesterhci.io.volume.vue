@@ -378,6 +378,7 @@ export default {
     <NameNsDescription
       :value="value"
       :namespaced="true"
+      :name-required="false"
       :mode="mode"
       @update:value="$emit('update:value', $event)"
     />
