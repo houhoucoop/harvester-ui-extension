@@ -30,12 +30,15 @@
     },
     {
       "matchUpdateTypes": ["minor"],
-      "groupName": "minor dependencies"
+      "groupName": "minor dependencies",
+      "labels": ["minor-update"],
+      "reviewers": ["a110605", "houhoucoop"]
     },
     {
       "matchUpdateTypes": ["patch", "digest"],
       "automerge": true,
-      "groupName": "patch digest dependencies"
+      "groupName": "patch digest dependencies",
+      "labels": ["patch-update", "automerge"]
     }
   ]
 }
