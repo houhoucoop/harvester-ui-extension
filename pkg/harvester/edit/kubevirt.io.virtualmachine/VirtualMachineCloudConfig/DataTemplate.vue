@@ -20,6 +20,10 @@ export default {
       type:    String,
       default: 'create'
     },
+    osType: {
+      type:    String,
+      default: ''
+    },
     value: {
       type:    String,
       default: ''
@@ -64,6 +68,12 @@ export default {
   },
 
   watch: {
+    osType(neu) {
+      if (neu === 'windows') {
+        this.id = '';
+      }
+    },
+
     value(neu) {
       this.yamlScript = neu;
     },

@@ -1533,6 +1533,7 @@ export default {
       if (val) {
         this['sshKey'] = [];
         this['userScript'] = undefined;
+        this['networkScript'] = undefined;
         this['installAgent'] = false;
       }
     },
@@ -1590,8 +1591,9 @@ export default {
       }
     },
 
-    osType(neu) {
-      const out = this.getUserData({ installAgent: this.installAgent, osType: neu });
+    osType(neu, old) {
+      this.installAgent = old === 'windows' ? true : this.installAgent;
+      const out = old === 'windows' ? this.getInitUserData({ osType: neu }) : this.getUserData({ installAgent: this.installAgent, osType: neu });
 
       this['userScript'] = out;
       this.refreshYamlEditor();
