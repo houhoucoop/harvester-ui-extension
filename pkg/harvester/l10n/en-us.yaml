@@ -56,7 +56,7 @@ dialog:
     title: "Delete {type}"
     warningMessage: "Deleting the selected {type} permanently removes all resources on {thisOrThese} {type}. This action is irreversible. Do you want to continue?"
     confirmName: "Type <b>{nameToMatch}</b> to delete the {type}:"
-    protip: "Tip: Hold the {alternateLabel} key while clicking Delete to bypass the confirmation step"
+    protip: "Tip: Hold the {alternateLabel} key while clicking Delete to bypass the confirmation step."
 
 harvester:
   branding:
