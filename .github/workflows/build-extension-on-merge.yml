@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - 'release-harvester-v*'
+      - 'main'
 
 jobs:
   setup-target-branch:
@@ -17,13 +18,16 @@ jobs:
       - name: Determine target branch
         id: get-version
         run: |
-          if [[ "${{ github.ref_name }}" =~ ^release-harvester-v([0-9]+\.[0-9]+)$ ]]; then
+          if [[ "${{ github.ref_name }}" == "main" ]]; then
+            TARGET_BRANCH="main-head"
+          elif [[ "${{ github.ref_name }}" =~ ^release-harvester-v([0-9]+\.[0-9]+)$ ]]; then
             TARGET_BRANCH="v${BASH_REMATCH[1]}-head"
-            echo "target_branch=${TARGET_BRANCH}" >> $GITHUB_ENV
-            echo "target_branch=${TARGET_BRANCH}" >> $GITHUB_OUTPUT
           else
             echo "Error: invalid branch format." && exit 1
           fi
+
+          echo "target_branch=${TARGET_BRANCH}" >> $GITHUB_ENV
+          echo "target_branch=${TARGET_BRANCH}" >> $GITHUB_OUTPUT
 
       - name: Ensure target branch exists
         run: |
