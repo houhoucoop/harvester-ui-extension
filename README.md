@@ -49,7 +49,7 @@ API=https://your-rancher-ip yarn dev
 
 - **`main`** – Main development branch
 - **`release-harvester-vX.Y`** – Stable release branches per version series
-- **`vX.Y-head`** – Testing branches for ongoing changes in each release series
+- **`vX.Y-head`** – Testing branches for ongoing changes to extension builds in each release series
 
 > **Note:**
 > The `vX.Y-head` branches are auto-generated and kept in sync with release branches. Use these for testing the latest changes in each version series.
