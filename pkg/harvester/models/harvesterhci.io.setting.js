@@ -111,15 +111,18 @@ export default class HciSetting extends HarvesterResource {
   }
 
   get parseValue() {
-    let parseDefaultValue = {};
-
     try {
-      parseDefaultValue = JSON.parse(this.value);
+      if (this.value) {
+        return JSON.parse(this.value);
+      } else if (this.default) {
+        return JSON.parse(this.default);
+      }
     } catch (err) {
-      parseDefaultValue = JSON.parse(this.default);
+      // eslint-disable-next-line no-console
+      console.error('Failed to parse setting value or default:', err);
     }
 
-    return parseDefaultValue;
+    return {};
   }
 
   get isS3() {
