@@ -1,4 +1,5 @@
 <script>
+import { NORMAN } from '@shell/config/types';
 import { HCI } from '../types';
 
 export default {
@@ -13,10 +14,24 @@ export default {
     const harvesterSettings = await this.$store.dispatch('harvester/findAll', { type: HCI.SETTING });
 
     this.harvesterSettings = harvesterSettings;
+
+    const clusterRoleTemplateBindingSchema = this.$store.getters['rancher/schemaFor'](NORMAN.CLUSTER_ROLE_TEMPLATE_BINDING);
+
+    if (clusterRoleTemplateBindingSchema) {
+      const normanBindings = await this.$store.dispatch('rancher/findAll', { type: NORMAN.CLUSTER_ROLE_TEMPLATE_BINDING }, { root: true });
+
+      this.clusterRoleTemplateBinding = normanBindings;
+    }
   },
 
   data() {
-    return { harvesterSettings: [] };
+    const user = this.$store.getters['auth/v3User'];
+
+    return {
+      harvesterSettings:          [],
+      clusterRoleTemplateBinding: [],
+      user,
+    };
   },
 
   computed: {
@@ -31,19 +46,28 @@ export default {
       } catch (e) {}
 
       return isMatch;
+    },
+
+    isClusterOwner() {
+      const template = this.clusterRoleTemplateBinding.find((template) => {
+        return template.userId === this.user?.id;
+      });
+
+      return template?.roleTemplateId === 'cluster-owner';
+    },
+
+    shouldShowError() {
+      return this.isClusterOwner && !this.isMatch && this.value;
     }
   }
 };
 </script>
 
 <template>
-  <div v-if="isMatch">
-    {{ value }}
-  </div>
-  <div v-else>
+  <div>
     {{ value }}
     <p
-      v-if="value"
+      v-if="shouldShowError"
       class="text-error"
     >
       {{ t('harvester.backup.matchTarget') }}
