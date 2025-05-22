@@ -90,12 +90,22 @@ export default {
     },
 
     imagesOption() {
-      return this.images.filter((c) => c.isReady).sort((a, b) => a.creationTimestamp > b.creationTimestamp ? -1 : 1).map( (I) => {
-        return {
-          label: this.imageOptionLabel(I),
-          value: I.id
-        };
-      });
+      return this.images
+        .filter((image) => {
+          if (!image.isReady) return false;
+
+          // exclude internal images created during upgrade
+          const isInternalCreatedImage =
+            image.namespace === 'harvester-system' &&
+            image.labels?.['harvesterhci.io/upgrade'];
+
+          return !isInternalCreatedImage;
+        })
+        .sort((a, b) => (a.creationTimestamp > b.creationTimestamp ? -1 : 1))
+        .map((image) => ({
+          label: this.imageOptionLabel(image),
+          value: image.id,
+        }));
     },
 
     imageName() {
