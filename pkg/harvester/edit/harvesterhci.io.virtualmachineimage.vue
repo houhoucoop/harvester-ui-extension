@@ -110,6 +110,7 @@ export default {
       headers:        {},
       fileUrl:        '',
       file:           '',
+      HCI_ANNOTATIONS,
     };
   },
 
@@ -595,6 +596,8 @@ export default {
           :pad-left="false"
           :read-allowed="false"
           :value-can-be-empty="true"
+          :toggle-filter="true"
+          :protected-keys="[HCI_ANNOTATIONS.IMAGE_DISPLAY_NAME]"
           @focusKey="focusKey"
           @update:value="value.setLabels($event)"
         >
@@ -611,7 +614,7 @@ export default {
             <input
               v-else
               v-model="row[valueName]"
-              :disabled="isView"
+              :disabled="isView || row[keyName] === HCI_ANNOTATIONS.IMAGE_DISPLAY_NAME"
               :type="'text'"
               :placeholder="t('keyValue.valuePlaceholder')"
               autocorrect="off"
