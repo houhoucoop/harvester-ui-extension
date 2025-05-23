@@ -35,6 +35,7 @@ export const HCI = {
   NODE_SCHEDULABLE:                 'kubevirt.io/schedulable',
   NETWORK_ROUTE:                    'network.harvesterhci.io/route',
   MATCHED_NODES:                    'network.harvesterhci.io/matched-nodes',
+  UPGRADE:                          'harvesterhci.io/upgrade',
   OS_UPGRADE_IMAGE:                 'harvesterhci.io/os-upgrade-image',
   LATEST_UPGRADE:                   'harvesterhci.io/latestUpgrade',
   UPGRADE_STATE:                    'harvesterhci.io/upgradeState',
