@@ -8,6 +8,7 @@ import { Banner } from '@components/Banner';
 import { PVC } from '@shell/config/types';
 import { formatSi, parseSi } from '@shell/utils/units';
 import { HCI } from '../../../../types';
+import { HCI as HCI_ANNOTATIONS } from '@pkg/harvester/config/labels-annotations';
 import { VOLUME_TYPE, InterfaceOption } from '../../../../config/harvester-map';
 import { _VIEW } from '@shell/config/query-params';
 import LabelValue from '@shell/components/LabelValue';
@@ -70,6 +71,7 @@ export default {
     return {
       GIBIBYTE,
       VOLUME_TYPE,
+      HCI_ANNOTATIONS,
       InterfaceOption,
       loading: false,
       images:  [],
@@ -90,12 +92,22 @@ export default {
     },
 
     imagesOption() {
-      return this.images.filter((c) => c.isReady).sort((a, b) => a.creationTimestamp > b.creationTimestamp ? -1 : 1).map( (I) => {
-        return {
-          label: this.imageOptionLabel(I),
-          value: I.id
-        };
-      });
+      return this.images
+        .filter((image) => {
+          if (!image.isReady) return false;
+
+          // exclude internal images created during upgrade
+          const isInternalCreatedImage =
+            image.namespace === 'harvester-system' &&
+            image.labels?.[HCI_ANNOTATIONS.UPGRADE];
+
+          return !isInternalCreatedImage;
+        })
+        .sort((a, b) => (a.creationTimestamp > b.creationTimestamp ? -1 : 1))
+        .map((image) => ({
+          label: this.imageOptionLabel(image),
+          value: image.id,
+        }));
     },
 
     imageName() {
