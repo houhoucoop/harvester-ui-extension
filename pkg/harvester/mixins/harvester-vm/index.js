@@ -72,6 +72,8 @@ export const OS = [{
 export const CD_ROM = 'cd-rom';
 export const HARD_DISK = 'disk';
 
+const MACHINE_TYPES = ['q35'];
+
 export default {
   mixins: [impl],
 
@@ -302,7 +304,7 @@ export default {
 
   async created() {
     await this.$store.dispatch(`${ this.inStore }/findAll`, { type: SECRET });
-    const machineTypes = await this.$store.dispatch('harvester/request', { url: '/v1/harvester/clusters/local?link=machineTypes' });
+    const machineTypes = this.value.vmMachineTypesFeatureEnabled ? await this.$store.dispatch('harvester/request', { url: '/v1/harvester/clusters/local?link=machineTypes' }) : MACHINE_TYPES;
 
     this.machineTypes = machineTypes;
     this.getInitConfig({ value: this.value, init: this.isCreate });

@@ -114,7 +114,13 @@ export default {
     },
 
     machineTypeOptions() {
-      return this.machineTypes.map((type) => ({ label: type, value: type }));
+      return this.value.vmMachineTypesFeatureEnabled ? this.machineTypes.map((type) => ({ label: type, value: type })) : [{
+        label: 'None',
+        value: ''
+      }, {
+        label: 'q35',
+        value: 'q35'
+      }];
     },
 
     templateOptions() {
