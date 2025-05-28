@@ -189,9 +189,15 @@ export default {
         }
 
         this.value.spec['templateId'] = `${ namespace }/${ name }`;
+
+        // inherit labels and annotations so the VM gets them when created from the template
         this.value.spec.vm.metadata.labels = {
           ...this.value.spec.vm.metadata.labels,
           ...this.value.metadata.labels
+        };
+        this.value.spec.vm.metadata.annotations = {
+          ...this.value.spec.vm.metadata.annotations,
+          ...this.value.metadata.annotations
         };
         const res = await this.value.save();
 
@@ -361,6 +367,26 @@ export default {
           :read-allowed="false"
           :value-can-be-empty="true"
           @update:value="value.setInstanceLabels($event)"
+        />
+      </Tab>
+      <Tab
+        name="annotations"
+        :label="t('harvester.tab.annotations')"
+        :weight="-11"
+      >
+        <Banner color="info">
+          <t k="harvester.virtualMachine.annotations.banner" />
+        </Banner>
+        <KeyValue
+          key="annotations"
+          :value="value.annotations"
+          :protected-keys="value.systemAnnotations || []"
+          :toggle-filter="true"
+          :add-label="t('labels.addAnnotation')"
+          :mode="mode"
+          :read-allowed="false"
+          :value-can-be-empty="true"
+          @update:value="value.setAnnotations($event)"
         />
       </Tab>
       <Tab
