@@ -189,6 +189,10 @@ export default {
         }
 
         this.value.spec['templateId'] = `${ namespace }/${ name }`;
+        this.value.spec.vm.metadata.labels = {
+          ...this.value.spec.vm.metadata.labels,
+          ...this.value.metadata.labels
+        };
         const res = await this.value.save();
 
         await this.saveSecret(res);

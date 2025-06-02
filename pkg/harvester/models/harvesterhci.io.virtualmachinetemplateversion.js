@@ -60,11 +60,11 @@ export default class HciVmTemplateVersion extends HarvesterResource {
   applyDefaults() {
     const spec = {
       vm: {
-        metadata: { annotations: { [HCI_ANNOTATIONS.VOLUME_CLAIM_TEMPLATE]: '[]' } },
+        metadata: { annotations: { [HCI_ANNOTATIONS.VOLUME_CLAIM_TEMPLATE]: '[]' }, labels: {} },
         spec:     {
           runStrategy: 'RerunOnFailure',
           template:    {
-            metadata: { annotations: {} },
+            metadata: { annotations: {}, labels: {} },
             spec:     {
               domain: {
                 machine: { type: '' },

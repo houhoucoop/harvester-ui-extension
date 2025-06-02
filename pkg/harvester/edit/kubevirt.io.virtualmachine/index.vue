@@ -255,6 +255,10 @@ export default {
 
         cloneVersionVM.metadata.annotations[HCI_ANNOTATIONS.VOLUME_CLAIM_TEMPLATE] = JSON.stringify(deleteDataSource);
 
+        // Update labels and instance labels value
+        this.value.metadata.labels = cloneVersionVM.metadata.labels;
+        this.value.spec.template.metadata.labels = cloneVersionVM.spec.template.metadata.labels;
+
         this.getInitConfig({
           value: cloneVersionVM, existUserData: true, fromTemplate: true
         });
