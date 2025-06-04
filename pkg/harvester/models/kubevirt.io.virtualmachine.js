@@ -233,7 +233,7 @@ export default class VirtVm extends HarvesterResource {
     const spec = {
       runStrategy: 'RerunOnFailure',
       template:    {
-        metadata: { annotations: {} },
+        metadata: { annotations: {}, labels: {} },
         spec:     {
           domain: {
             machine: { type: '' },
@@ -283,6 +283,7 @@ export default class VirtVm extends HarvesterResource {
 
     if (realMode !== _CLONE) {
       this.metadata['annotations'] = { [HCI_ANNOTATIONS.VOLUME_CLAIM_TEMPLATE]: '[]' };
+      this.metadata['labels'] = {};
       this['spec'] = spec;
     }
   }
