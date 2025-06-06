@@ -312,12 +312,22 @@ export default class VirtVm extends HarvesterResource {
     this.metadata.annotations[HCI_ANNOTATIONS.VOLUME_CLAIM_TEMPLATE] = JSON.stringify(deleteDataSource);
   }
 
-  restartVM() {
-    this.doActionGrowl('restart', {});
+  restartVM(resources = this) {
+    this.$dispatch('promptModal', {
+      resources,
+      action:            'restart',
+      warningMessageKey: 'dialog.confirmExecution.warningMessage',
+      component:         'ConfirmExecutionDialog'
+    });
   }
 
-  softrebootVM() {
-    this.doActionGrowl('softreboot', {});
+  softrebootVM(resources = this) {
+    this.$dispatch('promptModal', {
+      resources,
+      action:            'softreboot',
+      warningMessageKey: 'dialog.confirmExecution.warningMessage',
+      component:         'ConfirmExecutionDialog'
+    });
   }
 
   openLogs() {
@@ -410,7 +420,7 @@ export default class VirtVm extends HarvesterResource {
     this.$dispatch('promptModal', {
       resources,
       action:            'pause',
-      warningMessageKey: 'dialog.confirmExecution.pause.message',
+      warningMessageKey: 'dialog.confirmExecution.warningMessage',
       component:         'ConfirmExecutionDialog'
     });
   }
@@ -434,7 +444,7 @@ export default class VirtVm extends HarvesterResource {
     this.$dispatch('promptModal', {
       resources,
       action:            'stop',
-      warningMessageKey: 'dialog.confirmExecution.stop.message',
+      warningMessageKey: 'dialog.confirmExecution.warningMessage',
       component:         'ConfirmExecutionDialog'
     });
   }

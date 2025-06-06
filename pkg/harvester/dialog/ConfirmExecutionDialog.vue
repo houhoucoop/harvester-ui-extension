@@ -130,7 +130,7 @@ export default {
     <template #body>
       <div class="pl-10 pr-10">
         <span
-          v-clean-html="t(warningMessageKey, { type, names: resourceNames }, true)"
+          v-clean-html="t(warningMessageKey, { action: modalData.action, type, names: resourceNames }, true)"
         ></span>
         <div class="text-info mt-20">
           {{ protip }}

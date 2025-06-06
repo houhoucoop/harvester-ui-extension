@@ -48,10 +48,7 @@ dialog:
       other { and <b>{count} other </b>}
       }
     protip: "Tip: Hold the {alternateLabel} key while clicking action to bypass this confirmation"
-    stop:
-      message: "Are you sure you want to continue stop the {type} {names}?"
-    pause:
-      message: "Are you sure you want to continue pause the {type} {names}?"
+    warningMessage: "Are you sure you want to continue {action} the {type} {names}?"
   promptRemove:
     title: "Delete {type}"
     warningMessage: "Deleting the selected {type} permanently removes all resources on {thisOrThese} {type}. This action is irreversible. Do you want to continue?"
@@ -66,7 +63,6 @@ harvester:
       tip: 'Upload an icon to replace the Harvester favicon in the browser tab. Max file size is 20KB'
   productLabel: 'Harvester'
   modal:
-    
     backup:
       success: 'Backup { backUpName } has been initiated.'
       addBackup: Add Backup
@@ -897,7 +893,7 @@ harvester:
     releaseTip: Please read the upgrade documentation carefully. You can view details on the <a href="{url}" target="_blank">Harvester Release Notes</a>.
     checkReady: I have read and understood the upgrade instructions related to this Harvester version.
     pending: Pending
-    upload: 
+    upload:
       duplicatedFile: The file you are trying to upload already exists.
     repoInfo:
       upgradeStatus: Upgrade Status
