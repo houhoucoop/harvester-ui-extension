@@ -316,7 +316,7 @@ export default class VirtVm extends HarvesterResource {
     this.$dispatch('promptModal', {
       resources,
       action:            'restart',
-      warningMessageKey: 'dialog.confirmExecution.warningMessage',
+      warningMessageKey: 'dialog.confirmExecution.restart.message',
       component:         'ConfirmExecutionDialog'
     });
   }
@@ -325,7 +325,7 @@ export default class VirtVm extends HarvesterResource {
     this.$dispatch('promptModal', {
       resources,
       action:            'softreboot',
-      warningMessageKey: 'dialog.confirmExecution.warningMessage',
+      warningMessageKey: 'dialog.confirmExecution.softreboot.message',
       component:         'ConfirmExecutionDialog'
     });
   }
@@ -420,7 +420,7 @@ export default class VirtVm extends HarvesterResource {
     this.$dispatch('promptModal', {
       resources,
       action:            'pause',
-      warningMessageKey: 'dialog.confirmExecution.warningMessage',
+      warningMessageKey: 'dialog.confirmExecution.pause.message',
       component:         'ConfirmExecutionDialog'
     });
   }
@@ -444,7 +444,7 @@ export default class VirtVm extends HarvesterResource {
     this.$dispatch('promptModal', {
       resources,
       action:            'stop',
-      warningMessageKey: 'dialog.confirmExecution.warningMessage',
+      warningMessageKey: 'dialog.confirmExecution.stop.message',
       component:         'ConfirmExecutionDialog'
     });
   }

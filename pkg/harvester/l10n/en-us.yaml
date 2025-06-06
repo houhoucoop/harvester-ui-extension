@@ -48,7 +48,14 @@ dialog:
       other { and <b>{count} other </b>}
       }
     protip: "Tip: Hold the {alternateLabel} key while clicking action to bypass this confirmation"
-    warningMessage: "Are you sure you want to continue {action} the {type} {names}?"
+    stop:
+      message: "Are you sure you want to stop the {type} {names}?"
+    pause:
+      message: "Are you sure you want to pause the {type} {names}?"
+    restart:
+      message: "Are you sure you want to restart the {type} {names}?"
+    softreboot:
+      message: "Are you sure you want to soft reboot the {type} {names}?"
   promptRemove:
     title: "Delete {type}"
     warningMessage: "Deleting the selected {type} permanently removes all resources on {thisOrThese} {type}. This action is irreversible. Do you want to continue?"
