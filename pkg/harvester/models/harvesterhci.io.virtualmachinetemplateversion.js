@@ -284,4 +284,10 @@ export default class HciVmTemplateVersion extends HarvesterResource {
   get efiPersistentStateFeatureEnabled() {
     return this.$rootGetters['harvester-common/getFeatureEnabled']('efiPersistentState');
   }
+
+  get systemAnnotations() {
+    const annotations = this.annotations || {};
+
+    return Object.keys(annotations).filter((key) => key.includes(HCI_ANNOTATIONS.TEMPLATE_VERSION_CUSTOM_NAME));
+  }
 }
