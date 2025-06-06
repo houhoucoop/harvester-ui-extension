@@ -131,11 +131,12 @@ export default class VirtVm extends HarvesterResource {
         label:   this.t('harvester.action.unpause')
       },
       {
-        action:   'restartVM',
-        enabled:  !!this.actions?.restart,
-        icon:     'icon icon-refresh',
-        label:    this.t('harvester.action.restart'),
-        bulkable: true
+        action:     'restartVM',
+        enabled:    !!this.actions?.restart,
+        icon:       'icon icon-refresh',
+        label:      this.t('harvester.action.restart'),
+        bulkable:   true,
+        bulkAction: 'restartVM'
       },
       {
         action:  'softrebootVM',
@@ -312,12 +313,22 @@ export default class VirtVm extends HarvesterResource {
     this.metadata.annotations[HCI_ANNOTATIONS.VOLUME_CLAIM_TEMPLATE] = JSON.stringify(deleteDataSource);
   }
 
-  restartVM() {
-    this.doActionGrowl('restart', {});
+  restartVM(resources = this) {
+    this.$dispatch('promptModal', {
+      resources,
+      action:            'restart',
+      warningMessageKey: 'dialog.confirmExecution.restart.message',
+      component:         'ConfirmExecutionDialog'
+    });
   }
 
-  softrebootVM() {
-    this.doActionGrowl('softreboot', {});
+  softrebootVM(resources = this) {
+    this.$dispatch('promptModal', {
+      resources,
+      action:            'softreboot',
+      warningMessageKey: 'dialog.confirmExecution.softreboot.message',
+      component:         'ConfirmExecutionDialog'
+    });
   }
 
   openLogs() {
