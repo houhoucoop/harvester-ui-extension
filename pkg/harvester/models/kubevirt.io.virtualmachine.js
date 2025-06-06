@@ -131,11 +131,12 @@ export default class VirtVm extends HarvesterResource {
         label:   this.t('harvester.action.unpause')
       },
       {
-        action:   'restartVM',
-        enabled:  !!this.actions?.restart,
-        icon:     'icon icon-refresh',
-        label:    this.t('harvester.action.restart'),
-        bulkable: true
+        action:     'restartVM',
+        enabled:    !!this.actions?.restart,
+        icon:       'icon icon-refresh',
+        label:      this.t('harvester.action.restart'),
+        bulkable:   true,
+        bulkAction: 'restartVM'
       },
       {
         action:  'softrebootVM',
