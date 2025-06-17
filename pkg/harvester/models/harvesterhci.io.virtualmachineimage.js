@@ -43,8 +43,8 @@ export default class HciVmImage extends HarvesterResource {
 
     out = out.filter( (A) => !toFilter.includes(A.action));
 
-    // filter out clone action if not encrypted or decrypted
-    if (!this.isEncrypted && !this.isDecrypted) {
+    // show `Clone` only when imageSource is `download`
+    if (this.imageSource !== 'download') {
       out = out.filter(({ action }) => action !== 'goToClone');
     }
 
@@ -207,13 +207,6 @@ export default class HciVmImage extends HarvesterResource {
   get isEncrypted() {
     return this.spec.sourceType === 'clone' &&
     this.spec.securityParameters?.cryptoOperation === 'encrypt' &&
-    !!this.spec.securityParameters?.sourceImageName &&
-    !!this.spec.securityParameters?.sourceImageNamespace;
-  }
-
-  get isDecrypted() {
-    return this.spec.sourceType === 'clone' &&
-    this.spec.securityParameters?.cryptoOperation === 'decrypt' &&
     !!this.spec.securityParameters?.sourceImageName &&
     !!this.spec.securityParameters?.sourceImageNamespace;
   }
