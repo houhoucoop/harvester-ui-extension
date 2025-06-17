@@ -30,15 +30,23 @@ export default {
     category: {
       type:     String,
       required: true,
+    },
+
+    searchQuery: {
+      type:    String,
+      default: ''
     }
   },
 
   data() {
     const categorySettings = this.filterCategorySettings();
+    const filteredSettings = this.filterSearchSettings(categorySettings, this.searchQuery);
 
     return {
       HCI_SETTING,
       categorySettings,
+      filteredSettings,
+      originalHideMap: this.createHideMap(categorySettings)
     };
   },
 
@@ -48,12 +56,81 @@ export default {
     settings: {
       deep: true,
       handler() {
-        this['categorySettings'] = this.filterCategorySettings();
+        this.categorySettings = this.filterCategorySettings();
+        this.filteredSettings = this.filterSearchSettings(this.categorySettings, this.searchQuery);
+      }
+    },
+    searchQuery: {
+      immediate: true,
+      handler(newQuery) {
+        const filtered = this.filterSearchSettings(this.categorySettings, newQuery);
+
+        this.filteredSettings = newQuery ? this.openJsonSettings(filtered) : filtered.map((s) => ({ ...s, hide: this.originalHideMap[s.id] ?? false }));
       }
     }
   },
 
   methods: {
+    createHideMap(settings = []) {
+      const map = settings.reduce((acc, s) => {
+        acc[s.id] = s.hide ?? false;
+
+        return acc;
+      }, {} );
+
+      return map;
+    },
+    filterSearchSettings(settings, searchKey) {
+      if (!searchKey) {
+        return this.filterCategorySettings();
+      }
+      const searchQuery = searchKey.toLowerCase();
+
+      return settings.filter((setting) => {
+        const id = setting.id?.toLowerCase() || '';
+
+        // filter by id
+        if (id.includes(searchQuery) ) {
+          return true;
+        }
+
+        const description = this.t(setting.description, {}, true)?.toLowerCase() || '';
+
+        // filter by description
+        if (description.includes(searchQuery)) {
+          return true;
+        }
+
+        // filter by customized value
+        if (setting.customized === true && setting.data?.value) {
+          const value = setting.data.value?.toLowerCase() || '';
+
+          return value.includes(searchQuery);
+        }
+
+        // filter by json value
+        if (setting.kind === 'json' && setting.json) {
+          try {
+            const json = JSON.parse(setting.json);
+            const jsonString = JSON.stringify(json).toLowerCase();
+
+            return jsonString.includes(searchQuery);
+          } catch (e) {
+            console.error(`${ setting.id }: wrong format`, e); // eslint-disable-line no-console
+
+            return false;
+          }
+        }
+
+        // filter by default value
+        if (setting.data?.default) {
+          return setting.data?.default.includes(searchQuery);
+        }
+
+        return false;
+      });
+    },
+
     filterCategorySettings() {
       return this.settings.filter((s) => {
         if (!this.getFeatureEnabled(s.featureFlag)) {
@@ -87,12 +164,17 @@ export default {
       return HCI_ALLOWED_SETTINGS.find((setting) => setting.id === id);
     },
 
+    openJsonSettings(settings) {
+      return settings.map((s) => s.hide ? { ...s, hide: false } : s);
+    },
+
     toggleHide(s) {
-      this.categorySettings.find((setting) => {
-        if (setting.id === s.id) {
-          setting.hide = !setting.hide;
-        }
-      });
+      const setting = this.filteredSettings.find((setting) => setting.id === s.id);
+
+      if (setting) {
+        setting.hide = !setting.hide;
+        this.originalHideMap[setting.id] = setting.hide;
+      }
     },
 
     async testConnect(buttonDone, value) {
@@ -126,7 +208,7 @@ export default {
 <template>
   <div>
     <div
-      v-for="(setting, i) in categorySettings"
+      v-for="(setting, i) in filteredSettings"
       :key="i"
       class="advanced-setting mb-20"
     >
@@ -221,6 +303,12 @@ export default {
         {{ setting.data.errMessage }}
       </Banner>
     </div>
+    <div
+      v-if="filteredSettings.length === 0"
+      class="advanced-setting mb-20 no-search-match"
+    >
+      <p> {{ t('harvester.setting.noSearchMatch') }} </p>
+    </div>
   </div>
 </template>
 
@@ -270,5 +358,9 @@ export default {
   border-radius: 5px;
   padding: 2px 10px;
   font-size: 12px;
+}
+
+.no-search-match {
+  text-align: center;
 }
 </style>
