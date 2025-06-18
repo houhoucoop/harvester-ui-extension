@@ -118,6 +118,10 @@ export default {
     imageName() {
       return this.value?.metadata?.annotations?.[HCI_ANNOTATIONS.IMAGE_NAME] || '-';
     },
+
+    sourceType() {
+      return this.value?.spec?.sourceType;
+    },
   }
 };
 </script>
@@ -249,6 +253,16 @@ export default {
           >
             &mdash;
           </span>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col span-12">
+          <LabelValue
+            :name="t('harvester.image.source')"
+            :value="sourceType"
+            class="mb-20"
+          />
         </div>
       </div>
 
