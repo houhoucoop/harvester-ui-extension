@@ -43,6 +43,11 @@ export default class HciVmImage extends HarvesterResource {
 
     out = out.filter( (A) => !toFilter.includes(A.action));
 
+    // show `Clone` only when imageSource is `download`
+    if (this.imageSource !== 'download') {
+      out = out.filter(({ action }) => action !== 'goToClone');
+    }
+
     const schema = this.$getters['schemaFor'](HCI.VM);
     let canCreateVM = true;
 
