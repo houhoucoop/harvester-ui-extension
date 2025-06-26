@@ -138,6 +138,7 @@ To validate changes in a release series, switch to the appropriate `vX.Y-head` b
 - Examples:
   - Test `1.0.x` series → `v1.0-head`
   - Test `1.5.x` series → `v1.5-head`
+  - Test `1.6.x` series → `v1.6-head`
 
 **Steps:**
 1. Navigate to **Rancher UI** → **Local** → **App** → **Repositories**
