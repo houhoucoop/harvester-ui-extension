@@ -8,6 +8,9 @@ jobs:
   add-backport-label:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Fetch all release branches and PR labels
         id: fetch_info
         env:
