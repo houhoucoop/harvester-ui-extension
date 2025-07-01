@@ -18,6 +18,9 @@ jobs:
           all_branches=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
             "https://api.github.com/repos/${{ github.repository }}/branches" | jq -r '.[].name')
 
+          echo "All branches names:"
+          echo "$all_branches"
+
           if [[ -z "$all_branches" ]]; then
             echo "No branches found or failed to fetch."
             echo "should_label=false" >> $GITHUB_OUTPUT
@@ -25,6 +28,8 @@ jobs:
           fi
 
           release_branches=$(echo "$all_branches" | grep -E '^release-harvester-v[0-9]+\.[0-9]+$' || true)
+          echo "Filtered release branches:"
+          echo "$release_branches"
 
           if [[ -z "$release_branches" ]]; then
             echo "No release branches found."
