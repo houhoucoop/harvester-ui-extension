@@ -3,6 +3,7 @@ name: Auto Backport Label
 on:
   pull_request:
     types: [opened, reopened]
+    branches: [main]
 
 jobs:
   add-backport-label:
