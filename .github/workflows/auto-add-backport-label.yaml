@@ -15,8 +15,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          all_branches=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-            "https://api.github.com/repos/${{ github.repository }}/branches" | jq -r '.[].name')
+          all_branches=$(gh api repos/${{ github.repository }}/branches --paginate --jq '.[].name' 2>/dev/null || echo "")
 
           echo "All branches names:"
           echo "$all_branches"
