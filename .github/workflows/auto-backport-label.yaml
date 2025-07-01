@@ -30,12 +30,14 @@ jobs:
           latest_branch=$(echo "$release_branches" | sort -Vr | head -n1)
           echo "latest_branch=$latest_branch" >> $GITHUB_OUTPUT
 
-          version=$(echo "$latest_branch" | sed -E 's/^release-harvester-v//' )
+          version=$(echo "$latest_branch" | sed -E 's/^release-harvester-v//')
           version_with_patch="${version}.0"
+          echo "Checking for tag: v${version_with_patch}"
 
           tags=$(gh api repos/${{ github.repository }}/releases --paginate --jq '.[].tag_name')
+          exact_match=$(echo "$tags" | grep -Fx "v${version_with_patch}" || true)
 
-          if echo "$tags" | grep -qx "v${version_with_patch}"; then
+          if [[ -n "$exact_match" ]]; then
             echo "Release tag v${version_with_patch} exists; skipping label."
             echo "should_label=false" >> $GITHUB_OUTPUT
           else
