@@ -2,6 +2,8 @@ pull_request_rules:
 - name: Automatically open backport PR to release-harvester-v1.6
   conditions:
     - base=main
+    - label="require backport/v1.6"
+    - merged
   actions:
     backport:
       branches:
@@ -9,13 +11,13 @@ pull_request_rules:
       assignees:
         - "{{ author }}"
       labels:
-        - "v1.6 backport PR"
+        - "backport/v1.6"
 
-pull_request_rules:
 - name: Automatically open backport PR to release-harvester-v1.5
   conditions:
     - base=main
-    - label="require backport 1.5"
+    - label="require backport/v1.5"
+    - merged
   actions:
     backport:
       branches:
@@ -23,12 +25,13 @@ pull_request_rules:
       assignees:
         - "{{ author }}"
       labels:
-        - "v1.5 backport PR"
+        - "backport/v1.5"
 
 - name: Automatically open backport PR to release-harvester-v1.0
   conditions:
     - base=main
-    - label="require backport 1.0"
+    - label="require backport/v1.0"
+    - merged
   actions:
     backport:
       branches:
@@ -36,7 +39,7 @@ pull_request_rules:
       assignees:
         - "{{ author }}"
       labels:
-        - "v1.0 backport PR"
+        - "backport/v1.0"
 
 - name: Ask to resolve conflict
   conditions:

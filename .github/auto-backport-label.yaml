@@ -1,0 +1,77 @@
+name: Auto Backport Label
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  add-backport-label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Fetch release branches
+        id: fetch_release_branches
+        run: |
+          set -euo pipefail
+
+          all_branches=$(gh api repos/${{ github.repository }}/branches --jq '.[].name' 2>/dev/null || echo "")
+
+          if [[ -z "$all_branches" ]]; then
+            echo "No branches found or failed to fetch."
+            echo "should_label=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          release_branches=$(echo "$all_branches" | grep -E '^release-harvester-v[0-9]+\.[0-9]+$' || true)
+
+          if [[ -z "$release_branches" ]]; then
+            echo "No release branches found."
+            echo "should_label=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          latest_branch=$(echo "$release_branches" | sort -Vr | head -n1)
+          echo "latest_branch=$latest_branch" >> $GITHUB_OUTPUT
+
+      - name: Determine if backport label is needed
+        id: check_backport_label
+        run: |
+          set -euo pipefail
+          latest_branch="${{ steps.fetch_release_branches.outputs.latest_branch }}"
+
+          if [[ -z "$latest_branch" ]]; then
+            echo "No latest release branch found; skipping backport label."
+            echo "should_label=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          version=$(echo "$latest_branch" | sed -E 's/^release-harvester-v//')
+          version_with_patch="${version}.0"
+          echo "Detected latest release version: $version_with_patch"
+
+          tag_exists=$(gh api repos/${{ github.repository }}/releases --jq '.[].tag_name' 2>/dev/null | grep -x "v${version_with_patch}" || true)
+
+          if [[ -z "$tag_exists" ]]; then
+            echo "Release tag v$version_with_patch not found; require backport label."
+            echo "should_label=true" >> $GITHUB_OUTPUT
+            echo "backport_label=require backport/v${version}" >> $GITHUB_OUTPUT
+          else
+            echo "Release tag v$version_with_patch exists; skipping backport label."
+            echo "should_label=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Get existing PR labels
+        id: get_pr_labels
+        run: |
+          pr_number=${{ github.event.pull_request.number }}
+          labels=$(gh pr view "$pr_number" --json labels --jq '.labels[].name' || echo "")
+          echo "labels=$labels" >> $GITHUB_OUTPUT
+
+      - name: Add backport label if needed
+        if: steps.check_backport_label.outputs.should_label == 'true' && !contains(steps.get_pr_labels.outputs.labels, steps.check_backport_label.outputs.backport_label)
+        uses: actions-ecosystem/action-add-labels@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          labels: ${{ steps.check_backport_label.outputs.backport_label }}
