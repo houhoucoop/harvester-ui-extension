@@ -6,7 +6,6 @@ import {
 } from '@shell/config/types';
 import { STATE, AGE, NAME, NAMESPACE } from '@shell/config/table-headers';
 import HarvesterVolumeState from '../formatters/HarvesterVolumeState';
-
 import { allSettled } from '../utils/promise';
 import { HCI, VOLUME_SNAPSHOT } from '../types';
 
@@ -58,7 +57,6 @@ export default {
     if (!pvcSchema?.collectionMethods.find((x) => x.toLowerCase() === 'post')) {
       this.$store.dispatch('type-map/configureType', { match: HCI.VOLUME, isCreatable: false });
     }
-
     this.rows = hash.pvcs;
   },
 
@@ -70,7 +68,10 @@ export default {
     schema() {
       return schema;
     },
-
+    filterRows() {
+      // we only show the non golden image PVCs in the list
+      return this.rows.filter((pvc) => !pvc?.isGoldenImageVolume);
+    },
     headers() {
       return [
         STATE,
@@ -92,7 +93,8 @@ export default {
         {
           name:     'storageClass',
           labelKey: 'tableHeaders.storageClass',
-          value:    'spec.storageClassName'
+          value:    'spec.storageClassName',
+          sort:     'spec.storageClassName'
         },
         {
           name:     'AttachedVM',
@@ -146,7 +148,7 @@ export default {
     :groupable="true"
     default-sort-by="age"
     :namespaced="true"
-    :rows="rows"
+    :rows="filterRows"
     :schema="schema"
     key-field="_key"
   >

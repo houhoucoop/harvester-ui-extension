@@ -61,8 +61,11 @@ export default {
       images:         this.$store.dispatch(`${ inStore }/findAll`, { type: HCI.IMAGE }),
       storageClasses: this.$store.dispatch(`${ inStore }/findAll`, { type: STORAGE_CLASS }),
     });
+
     this['storageClassName'] = this.storageClassName || this.defaultStorageClassName();
     this.images = this.$store.getters[`${ inStore }/all`](HCI.IMAGE);
+
+    this.storages = this.$store.getters[`${ inStore }/all`](STORAGE_CLASS);
 
     const { securityParameters } = this.value.spec;
 
@@ -98,14 +101,16 @@ export default {
     }
 
     return {
-      selectedImage: null,
-      images:        [],
-      url:           this.value.spec.url,
-      files:         [],
-      resource:      '',
-      headers:       {},
-      fileUrl:       '',
-      file:          '',
+      selectedImage:  null,
+      storageClasses: [],
+      images:         [],
+      url:            this.value.spec.url,
+      files:          [],
+      resource:       '',
+      headers:        {},
+      fileUrl:        '',
+      file:           '',
+      HCI_ANNOTATIONS,
     };
   },
 
@@ -158,9 +163,10 @@ export default {
 
     storageClassOptions() {
       const storages = this.value.spec?.securityParameters?.cryptoOperation === ENCRYPT ? this.encryptedStorageClasses : this.nonEncryptedStorageClasses;
+      const filteredStorages = this.value.thirdPartyStorageFeatureEnabled ? storages.filter((s) => !s.parameters?.backingImage) : storages
+        .filter((s) => !s.parameters?.backingImage && s.provisioner !== LVM_DRIVER) ;
 
-      return storages
-        .filter((s) => !s.parameters?.backingImage && s.provisioner !== LVM_DRIVER) // Lvm storage is not supported.
+      return filteredStorages
         .map((s) => {
           const label = s.isDefault ? `${ s.name } (${ this.t('generic.default') })` : s.name;
 
@@ -178,6 +184,9 @@ export default {
 
       set(nue) {
         this.value.metadata.annotations[HCI_ANNOTATIONS.STORAGE_CLASS] = nue;
+        if (this.value.thirdPartyStorageFeatureEnabled) {
+          this.value.spec.targetStorageClassName = nue;
+        }
       }
     },
     sourceImageOptions() {
@@ -255,6 +264,13 @@ export default {
         this.storageClassName = this.encryptedStorageClasses[0]?.name || '';
       } else { // URL / FILE / DECRYPT should use default storage class
         this.storageClassName = this.defaultStorageClassName();
+      }
+    },
+    'storageClassName'(neu) {
+      const storageClass = this.storages.find((s) => s.id === neu);
+
+      if (storageClass && this.value.thirdPartyStorageFeatureEnabled) {
+        this.value.spec.backend = storageClass.isLonghornV1 ? 'backingimage' : 'cdi';
       }
     }
   },
@@ -580,6 +596,8 @@ export default {
           :pad-left="false"
           :read-allowed="false"
           :value-can-be-empty="true"
+          :toggle-filter="true"
+          :protected-keys="[HCI_ANNOTATIONS.IMAGE_DISPLAY_NAME]"
           @focusKey="focusKey"
           @update:value="value.setLabels($event)"
         >
@@ -596,7 +614,7 @@ export default {
             <input
               v-else
               v-model="row[valueName]"
-              :disabled="isView"
+              :disabled="isView || row[keyName] === HCI_ANNOTATIONS.IMAGE_DISPLAY_NAME"
               :type="'text'"
               :placeholder="t('keyValue.valuePlaceholder')"
               autocorrect="off"

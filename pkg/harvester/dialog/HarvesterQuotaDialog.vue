@@ -5,6 +5,7 @@ import { Banner } from '@components/Banner';
 import AsyncButton from '@shell/components/AsyncButton';
 import UnitInput from '@shell/components/form/UnitInput';
 import { exceptionToErrorsArray } from '@shell/utils/error';
+import { GIBIBYTE } from '../utils/unit';
 
 export default {
   name: 'HarvesterVMQuotaDialog',
@@ -29,6 +30,7 @@ export default {
 
   data() {
     return {
+      GIBIBYTE,
       totalSnapshotSize: '',
       errors:            []
     };
@@ -44,7 +46,6 @@ export default {
   },
 
   methods: {
-
     close() {
       this.totalSnapshotSize = '';
       this.$emit('close');
@@ -92,8 +93,14 @@ export default {
         :input-exponent="3"
         :increment="1024"
         :output-modifier="true"
-        suffix="GiB"
+        :suffix="GIBIBYTE"
         class="mb-20"
+      />
+      <Banner
+        v-for="(err, i) in errors"
+        :key="i"
+        color="error"
+        :label="err"
       />
     </template>
 
@@ -108,12 +115,6 @@ export default {
           </button>
           <AsyncButton @click="save" />
         </div>
-        <Banner
-          v-for="(err, i) in errors"
-          :key="i"
-          color="error"
-          :label="err"
-        />
       </div>
     </template>
   </Card>

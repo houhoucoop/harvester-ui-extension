@@ -62,6 +62,14 @@ export default class HciStorageClass extends StorageClass {
     return this.parameters?.encrypted === 'true';
   }
 
+  get isLonghorn() {
+    return this.provisioner === LONGHORN_DRIVER;
+  }
+
+  get isLonghornV1() {
+    return this.provisioner === LONGHORN_DRIVER && this.longhornVersion === DATA_ENGINE_V1;
+  }
+
   get isLonghornV2() {
     return this.provisioner === LONGHORN_DRIVER && this.longhornVersion === DATA_ENGINE_V2;
   }
@@ -72,5 +80,9 @@ export default class HciStorageClass extends StorageClass {
 
   get volumeEncryptionFeatureEnabled() {
     return this.$rootGetters['harvester-common/getFeatureEnabled']('volumeEncryption');
+  }
+
+  get thirdPartyStorageFeatureEnabled() {
+    return this.$rootGetters['harvester-common/getFeatureEnabled']('thirdPartyStorage');
   }
 }

@@ -42,8 +42,25 @@ export default {
   computed: {
     ...mapState('action-menu', ['modalData']),
 
-    warningMessageKey() {
-      return this.modalData.warningMessageKey;
+    title() {
+      return this.modalData.title || 'dialog.promptRemove.title';
+    },
+
+    formattedType() {
+      return this.type.toLowerCase();
+    },
+
+    warningMessage() {
+      if (this.modalData.warningMessage) return this.modalData.warningMessage;
+
+      const isPlural = this.type.endsWith('s');
+      const thisOrThese = isPlural ? 'these' : 'this';
+      const defaultMessage = this.t('dialog.promptRemove.warningMessage', {
+        type: this.formattedType,
+        thisOrThese,
+      });
+
+      return defaultMessage;
     },
 
     names() {
@@ -68,6 +85,12 @@ export default {
 
     nameToMatch() {
       return this.resources[0].nameDisplay;
+    },
+
+    needConfirmation() {
+      const { needConfirmation = true } = this.modalData ;
+
+      return needConfirmation === true;
     },
 
     plusMore() {
@@ -97,11 +120,15 @@ export default {
     },
 
     deleteDisabled() {
+      if (!this.needConfirmation) {
+        return false;
+      }
+
       return this.confirmName !== this.nameToMatch;
     },
 
     protip() {
-      return this.t('promptRemove.protip', { alternateLabel });
+      return this.t('dialog.promptRemove.protip', { alternateLabel });
     },
   },
 
@@ -137,35 +164,45 @@ export default {
   >
     <template #title>
       <h4 class="text-default-text">
-        {{ t('promptRemove.title') }}
+        {{ t(title, { type }, true) }}
       </h4>
     </template>
 
     <template #body>
       <div class="pl-10 pr-10">
         <span
-          v-clean-html="t(warningMessageKey, { type, names: resourceNames }, true)"
+          v-clean-html="warningMessage"
         ></span>
 
-        <div class="mt-10 mb-10">
-          <span
-            v-clean-html="t('promptRemove.confirmName', { nameToMatch: escapeHtml(nameToMatch) }, true)"
-          ></span>
-        </div>
-        <div class="mb-10">
-          <CopyToClipboardText :text="nameToMatch" />
-        </div>
-        <input
-          id="confirm"
-          v-model="confirmName"
-          type="text"
-        />
-        <div class="text-info mt-20">
-          {{ protip }}
+        <div
+          v-if="needConfirmation"
+          class="mt-20"
+        >
+          <div class="mt-10 mb-10">
+            <span
+              v-clean-html="t('dialog.promptRemove.confirmName', {
+                type: formattedType,
+                nameToMatch: escapeHtml(nameToMatch)
+              }, true)"
+            ></span>
+          </div>
+          <div class="mb-10">
+            <CopyToClipboardText :text="nameToMatch" />
+          </div>
+          <input
+            id="confirm"
+            v-model="confirmName"
+            type="text"
+          />
+          <div class="text-info mt-20">
+            {{ protip }}
+          </div>
         </div>
         <Banner
           v-for="(error, i) in errors"
           :key="i"
+          :label="error"
+          color="error"
         />
       </div>
     </template>

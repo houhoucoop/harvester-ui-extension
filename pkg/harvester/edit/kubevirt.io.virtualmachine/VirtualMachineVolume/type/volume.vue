@@ -12,6 +12,8 @@ import LabelValue from '@shell/components/LabelValue';
 import { ucFirst } from '@shell/utils/string';
 import { LVM_DRIVER } from '../../../../models/harvester/storage.k8s.io.storageclass';
 import { DATA_ENGINE_V2 } from '../../../../models/harvester/persistentvolumeclaim';
+import { GIBIBYTE } from '../../../../utils/unit';
+import { VOLUME_MODE } from '@pkg/harvester/config/types';
 
 export default {
   name: 'HarvesterEditVolume',
@@ -58,6 +60,7 @@ export default {
 
   data() {
     return {
+      GIBIBYTE,
       VOLUME_TYPE,
       InterfaceOption,
       loading: false,
@@ -67,6 +70,10 @@ export default {
   computed: {
     longhornV2LVMSupport() {
       return this.$store.getters['harvester-common/getFeatureEnabled']('longhornV2LVMSupport');
+    },
+
+    thirdPartyStorageClassEnabled() {
+      return this.$store.getters['harvester-common/getFeatureEnabled']('thirdPartyStorage');
     },
 
     encryptionValue() {
@@ -87,6 +94,18 @@ export default {
       const allPVCs = this.$store.getters['harvester/all'](PVC) || [];
 
       return allPVCs.find((P) => P.id === `${ this.namespace }/${ this.value.volumeName }`);
+    },
+
+    showVolumeMode() {
+      if (!this.thirdPartyStorageClassEnabled || !!this.value?.storageClassName === false) {
+        return false;
+      }
+
+      if (this.isLonghornStorageClass) {
+        return false;
+      }
+
+      return true;
     },
 
     isDisabled() {
@@ -110,7 +129,17 @@ export default {
 
     isLonghornV2() {
       return this.value.pvc?.isLonghornV2 || this.value.pvc?.storageClass?.isLonghornV2;
-    }
+    },
+
+    isLonghornStorageClass() {
+      const selectedSC = this.storageClasses.find((sc) => sc.name === this.value?.storageClassName) || {};
+
+      return selectedSC && selectedSC.isLonghorn;
+    },
+
+    volumeModeOptions() {
+      return Object.values(VOLUME_MODE);
+    },
   },
 
   watch: {
@@ -118,6 +147,8 @@ export default {
       immediate: true,
       handler(neu) {
         this.value.accessMode = this.getAccessMode(neu);
+        this.value.volumeMode = this.getVolumeMode(neu, this.value.volumeMode);
+        this.update();
       }
     },
 
@@ -140,7 +171,7 @@ export default {
             minExponent: 3,
           });
 
-          this.value.size = `${ formatSize }Gi`;
+          this.value.size = `${ formatSize }${ GIBIBYTE }`;
         }
       },
       deep:      true,
@@ -149,6 +180,20 @@ export default {
   },
 
   methods: {
+    getVolumeMode(storageClassName, originalVolumeMode) {
+      if (!this.thirdPartyStorageClassEnabled) {
+        return VOLUME_MODE.BLOCK;
+      }
+      const storageClass = this.storageClasses.find((sc) => sc.name === storageClassName);
+
+      // longhorn v1, v2 use block volumeMode
+      if (storageClass && storageClass.isLonghorn) {
+        return VOLUME_MODE.BLOCK;
+      }
+
+      return originalVolumeMode;
+    },
+
     getAccessMode(storageClassName) {
       if (!this.longhornV2LVMSupport) {
         return 'ReadWriteMany';
@@ -156,10 +201,10 @@ export default {
 
       const storageClass = this.storageClasses.find((sc) => sc.name === storageClassName);
 
-      let readWriteOnce = this.value.pvc?.isLvm || this.value.pvc?.isLonghornV2;
+      let readWriteOnce = this.value.pvc?.isLvm || (!this.thirdPartyStorageClassEnabled && this.value.pvc?.isLonghornV2);
 
       if (storageClass) {
-        readWriteOnce = storageClass.provisioner === LVM_DRIVER || storageClass.parameters?.dataEngine === DATA_ENGINE_V2;
+        readWriteOnce = storageClass.provisioner === LVM_DRIVER || (!this.thirdPartyStorageClassEnabled && storageClass.parameters?.dataEngine === DATA_ENGINE_V2);
       }
 
       return readWriteOnce ? 'ReadWriteOnce' : 'ReadWriteMany';
@@ -258,6 +303,7 @@ export default {
             :required="validateRequired"
             :label="t('harvester.fields.size')"
             :disabled="isLonghornV2"
+            :suffix="GIBIBYTE"
             @update:value="update"
           />
         </InputOrDisplay>
@@ -284,6 +330,29 @@ export default {
         </InputOrDisplay>
       </div>
       <div
+        v-if="showVolumeMode"
+        data-testid="input-volume-mode"
+        class="col span-6"
+      >
+        <InputOrDisplay
+          :name="t('harvester.volume.volumeMode')"
+          :value="value.volumeMode"
+          :mode="mode"
+        >
+          <LabeledSelect
+            v-model:value="value.volumeMode"
+            :label="t('harvester.volume.volumeMode')"
+            :mode="mode"
+            :options="volumeModeOptions"
+            :disabled="isEdit"
+            required
+            @update:value="update"
+          />
+        </InputOrDisplay>
+      </div>
+    </div>
+    <div class="row mb-20">
+      <div
         v-if="value.volumeEncryptionFeatureEnabled && isView"
         class="col span-6"
       >
@@ -292,11 +361,9 @@ export default {
           :value="encryptionValue"
         />
       </div>
-    </div>
-    <div class="row mb-20">
       <div
         v-if="value.volumeBackups && isView"
-        class="col span-3"
+        class="col span-6"
       >
         <LabelValue
           :name="t('harvester.virtualMachine.volume.readyToUse')"

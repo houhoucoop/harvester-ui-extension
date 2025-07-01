@@ -84,6 +84,10 @@ export default {
       this.value['_type'] = TYPES.OPAQUE;
     }
 
+    if ( this.realMode === _CLONE) {
+      this.value['_type'] = this.liveValue._type;
+    }
+
     return {
       isCloud,
       nodeDrivers:       null,
@@ -234,7 +238,7 @@ export default {
       :resource="value"
       :errors="errors"
       @finish="saveSecret"
-      @error="e=>errors = e"
+      @error="e=>errors=e"
     >
       <NameNsDescription
         :value="value"

@@ -198,7 +198,7 @@ export default {
     :apply-hooks="applyHooks"
     :validation-passed="canSave"
     @finish="save"
-    @error="e=>errors = e"
+    @error="e=>errors=e"
   >
     <div class="banner">
       <Banner
@@ -233,7 +233,7 @@ export default {
           :disabled="isEdit || isView"
           :mode="mode"
           row
-          @input="onTypeChange"
+          @update:value="onTypeChange"
         />
       </div>
       <div class="row mb-30">

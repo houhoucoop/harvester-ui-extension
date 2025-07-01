@@ -8,10 +8,12 @@ import { Banner } from '@components/Banner';
 import { PVC } from '@shell/config/types';
 import { formatSi, parseSi } from '@shell/utils/units';
 import { HCI } from '../../../../types';
+import { HCI as HCI_ANNOTATIONS } from '@pkg/harvester/config/labels-annotations';
 import { VOLUME_TYPE, InterfaceOption } from '../../../../config/harvester-map';
 import { _VIEW } from '@shell/config/query-params';
 import LabelValue from '@shell/components/LabelValue';
 import { ucFirst } from '@shell/utils/string';
+import { GIBIBYTE } from '../../../../utils/unit';
 
 export default {
   name: 'HarvesterEditVMImage',
@@ -67,7 +69,9 @@ export default {
 
   data() {
     return {
+      GIBIBYTE,
       VOLUME_TYPE,
+      HCI_ANNOTATIONS,
       InterfaceOption,
       loading: false,
       images:  [],
@@ -88,12 +92,22 @@ export default {
     },
 
     imagesOption() {
-      return this.images.filter((c) => c.isReady).sort((a, b) => a.creationTimestamp > b.creationTimestamp ? -1 : 1).map( (I) => {
-        return {
-          label: `${ I.metadata.namespace }/${ I.spec.displayName }`,
-          value: I.id
-        };
-      });
+      return this.images
+        .filter((image) => {
+          if (!image.isReady) return false;
+
+          // exclude internal images created during upgrade
+          const isInternalCreatedImage =
+            image.namespace === 'harvester-system' &&
+            image.labels?.[HCI_ANNOTATIONS.UPGRADE];
+
+          return !isInternalCreatedImage;
+        })
+        .sort((a, b) => (a.creationTimestamp > b.creationTimestamp ? -1 : 1))
+        .map((image) => ({
+          label: this.imageOptionLabel(image),
+          value: image.id,
+        }));
     },
 
     imageName() {
@@ -116,8 +130,46 @@ export default {
       });
     },
 
+    thirdPartyStorageEnabled() {
+      return this.$store.getters['harvester-common/getFeatureEnabled']('thirdPartyStorage');
+    },
+
     isLonghornV2() {
       return this.value.pvc?.isLonghornV2 || this.value.pvc?.storageClass?.isLonghornV2;
+    },
+
+    selectedImage() {
+      return this.$store.getters['harvester/all'](HCI.IMAGE)?.find( (I) => this.value.image === I.id);
+    },
+
+    imageVirtualSize() {
+      if (this.selectedImage?.virtualSize) {
+        return this.selectedImage.virtualSize.replace(' ', '');
+      }
+
+      return '0';
+    },
+
+    diskSize() {
+      const size = this.value?.size || '0';
+
+      return size;
+    },
+
+    imageVirtualSizeInByte() {
+      return Math.max(this.selectedImage?.status?.size, this.selectedImage?.status?.virtualSize);
+    },
+
+    diskSizeInByte() {
+      return parseSi(this.value?.size || '0');
+    },
+
+    showDiskTooSmallError() {
+      if (!this.thirdPartyStorageEnabled ) {
+        return false;
+      }
+
+      return this.imageVirtualSizeInByte > this.diskSizeInByte;
     }
   },
 
@@ -149,7 +201,7 @@ export default {
             minExponent: 3,
           });
 
-          this.value.size = `${ formatSize }Gi`;
+          this.value.size = `${ formatSize }${ GIBIBYTE }`;
         }
       },
       deep:      true,
@@ -158,7 +210,17 @@ export default {
   },
 
   methods: {
+    imageOptionLabel(image) {
+      let label = `${ image.metadata.namespace }/${ image.spec.displayName }`;
+
+      if (this.thirdPartyStorageEnabled) {
+        label += ` (${ image.imageStorageClass } / ${ image.virtualSize })`;
+      }
+
+      return label;
+    },
     update() {
+      this.value.hasDiskError = this.showDiskTooSmallError;
       this.$emit('update');
     },
 
@@ -181,7 +243,7 @@ export default {
         if (!isIsoImage) {
           imageSizeGiB = Math.max(imageSizeGiB, 10);
         }
-        this.value['size'] = `${ imageSizeGiB }Gi`;
+        this.value['size'] = `${ imageSizeGiB }${ GIBIBYTE }`;
       }
 
       this.update();
@@ -288,7 +350,7 @@ export default {
             :mode="mode"
             :required="validateRequired"
             :disable="isLonghornV2"
-            suffix="GiB"
+            :suffix="GIBIBYTE"
             @update:value="update"
           />
         </InputOrDisplay>
@@ -340,6 +402,11 @@ export default {
       color="error"
       class="mb-20"
       :label="value.volumeBackups.error.message"
+    />
+    <Banner
+      v-if="!isView && showDiskTooSmallError"
+      color="error"
+      :label="t('harvester.virtualMachine.volume.vmImageVolumeTip', {diskSize: diskSize, imageVirtualSize: imageVirtualSize})"
     />
   </div>
 </template>

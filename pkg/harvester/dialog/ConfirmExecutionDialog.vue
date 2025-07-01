@@ -67,7 +67,7 @@ export default {
     plusMore() {
       const remaining = this.resources.length - this.names.length;
 
-      return this.t('dialog.confirmExecution.andOthers', { count: remaining });
+      return this.t('dialog.confirmExecution.andOthers', { count: remaining }, true);
     },
 
     type() {
@@ -138,6 +138,8 @@ export default {
         <Banner
           v-for="(error, i) in errors"
           :key="i"
+          :label="error"
+          color="error"
         />
       </div>
     </template>

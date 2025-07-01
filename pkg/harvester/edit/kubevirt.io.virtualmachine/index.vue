@@ -2,6 +2,7 @@
 import { isEqual } from 'lodash';
 import { mapGetters } from 'vuex';
 import Tabbed from '@shell/components/Tabbed';
+import { clone, set } from '@shell/utils/object';
 import Tab from '@shell/components/Tabbed/Tab';
 import { Checkbox } from '@components/Form/Checkbox';
 import CruResource from '@shell/components/CruResource';
@@ -10,16 +11,12 @@ import { LabeledInput } from '@components/Form/LabeledInput';
 import LabeledSelect from '@shell/components/form/LabeledSelect';
 import NameNsDescription from '@shell/components/form/NameNsDescription';
 import UnitInput from '@shell/components/form/UnitInput';
-import Labels from '@shell/components/form/Labels';
-
 import NodeScheduling from '@shell/components/form/NodeScheduling';
 import PodAffinity from '@shell/components/form/PodAffinity';
 import VGpuDevices from './VirtualMachineVGpuDevices/index';
 import UsbDevices from './VirtualMachineUSBDevices/index';
 import KeyValue from '@shell/components/form/KeyValue';
-
 import { clear } from '@shell/utils/array';
-import { clone } from '@shell/utils/object';
 import { saferDump } from '@shell/utils/create-yaml';
 import { exceptionToErrorsArray } from '@shell/utils/error';
 import { HCI as HCI_ANNOTATIONS } from '@pkg/harvester/config/labels-annotations';
@@ -65,7 +62,6 @@ export default {
     PodAffinity,
     AccessCredentials,
     Reserved,
-    Labels,
     PciDevices,
     RestartVMDialog,
     UnitInput,
@@ -118,13 +114,11 @@ export default {
     },
 
     machineTypeOptions() {
-      return [{
-        label: 'None',
-        value: ''
-      }, {
-        label: 'q35',
-        value: 'q35'
-      }];
+      return this.machineTypes.map((type) => {
+        if (!type) return { label: 'None', value: '' };
+
+        return { label: type, value: type };
+      });
     },
 
     templateOptions() {
@@ -195,7 +189,12 @@ export default {
 
       return true;
     },
+    isValidationPassed() {
+      // check if any disk hasDiskError is true
+      const hasError = this.diskRows.some((disk) => disk.hasDiskError === true);
 
+      return !hasError;
+    },
     showCpuPinningBanner() {
       if (!this.value.cpuPinningFeatureEnabled) {
         return false;
@@ -210,7 +209,10 @@ export default {
       }
 
       return false;
-    }
+    },
+    usbPassthroughEnabled() {
+      return this.$store.getters['harvester-common/getFeatureEnabled']('usbPassthrough');
+    },
   },
 
   watch: {
@@ -252,6 +254,11 @@ export default {
         });
 
         cloneVersionVM.metadata.annotations[HCI_ANNOTATIONS.VOLUME_CLAIM_TEMPLATE] = JSON.stringify(deleteDataSource);
+
+        // Update labels, instance labels and annotations
+        this.value.metadata.labels = cloneVersionVM.metadata.labels;
+        this.value.spec.template.metadata.labels = cloneVersionVM.spec.template.metadata.labels;
+        this.value.metadata.annotations = cloneVersionVM.metadata.annotations;
 
         this.getInitConfig({
           value: cloneVersionVM, existUserData: true, fromTemplate: true
@@ -407,13 +414,26 @@ export default {
       }
       const cloneDeepNewVM = clone(this.value);
 
+      // new VM
       delete cloneDeepNewVM?.metadata;
+      delete cloneDeepNewVM?.__clone;
+
+      // old VM
       delete this.cloneVM?.metadata;
       delete this.cloneVM?.__clone;
+
+      // add empty hostDevices to old VM as CRD does not have it.
+      const devicesObj = this.cloneVM?.spec?.template?.spec?.domain?.devices;
+
+      if (devicesObj && devicesObj.hostDevices === undefined) {
+        set(devicesObj, 'hostDevices', []);
+      }
 
       const oldVM = JSON.parse(JSON.stringify(this.cloneVM));
       const newVM = JSON.parse(JSON.stringify(cloneDeepNewVM));
 
+      // we won't show restart dialog in yaml page as we don't have a way to detect change in yaml editor.
+      // only check VM is changed in form page.
       if (isEqual(oldVM, newVM)) {
         return;
       }
@@ -422,7 +442,11 @@ export default {
         this.isOpen = true;
 
         this.$nextTick(() => {
-          this.$refs.restartDialog.resolve = resolve;
+          if (this?.$refs?.restartDialog) {
+            this.$refs.restartDialog.resolve = resolve;
+          } else {
+            return resolve();
+          }
         });
       });
     },
@@ -472,6 +496,7 @@ export default {
     },
 
     generateYaml() {
+      this.showYaml = this?.$refs?.vmCruResource?.showYaml || false;
       this.parseVM();
       const out = saferDump(this.value);
 
@@ -485,16 +510,19 @@ export default {
   <CruResource
     v-if="spec"
     id="vm"
+    ref="vmCruResource"
     :done-route="doneRoute"
     :resource="value"
     :cancel-event="true"
     :mode="mode"
+    :validation-passed="isValidationPassed"
     :can-yaml="isSingle ? true : false"
     :errors="errors"
     :generate-yaml="generateYaml"
     :apply-hooks="applyHooks"
     @finish="saveVM"
     @cancel="cancelAction"
+    @error="e=>errors=e"
   >
     <RadioGroup
       v-if="isCreate"
@@ -579,7 +607,7 @@ export default {
           :create-namespace="true"
           :namespace="value.metadata.namespace"
           :mode="mode"
-          :disabled="isWindows"
+          :disabled="isWindows || isEdit"
           @update:sshKey="updateSSHKey"
           @register-after-hook="registerAfterHook"
         />
@@ -671,7 +699,7 @@ export default {
       </Tab>
 
       <Tab
-        v-if="enabledPCI"
+        v-if="enabledPCI && usbPassthroughEnabled"
         :label="t('harvester.tab.usbDevices')"
         name="usbDevices"
         :weight="-7"
@@ -698,38 +726,70 @@ export default {
       </Tab>
 
       <Tab
+        name="labels"
+        :label="t('generic.labels')"
+        :weight="-9"
+      >
+        <Banner color="info">
+          <t k="harvester.virtualMachine.labels.banner" />
+        </Banner>
+        <KeyValue
+          key="labels"
+          :value="value.labels"
+          :add-label="t('labels.addLabel')"
+          :mode="mode"
+          :read-allowed="false"
+          :value-can-be-empty="true"
+          @update:value="value.setLabels($event)"
+        />
+      </Tab>
+
+      <Tab
         name="instanceLabel"
         :label="t('harvester.tab.instanceLabel')"
-        :weight="-8"
+        :weight="-10"
       >
-        <Labels
-          :default-container-class="'labels-and-annotations-container'"
-          :value="value"
+        <Banner color="info">
+          <t k="harvester.virtualMachine.instanceLabels.banner" />
+        </Banner>
+        <KeyValue
+          key="instance-labels"
+          :value="value.instanceLabels"
+          :protected-keys="value.systemLabels || []"
+          :toggle-filter="toggler"
+          :add-label="t('labels.addLabel')"
           :mode="mode"
-          :display-side-by-side="false"
-          :show-annotations="false"
-          :show-label-title="false"
-        >
-          <template #labels="{toggler}">
-            <KeyValue
-              key="labels"
-              :value="value.instanceLabels"
-              :protected-keys="value.systemLabels || []"
-              :toggle-filter="toggler"
-              :add-label="t('labels.addLabel')"
-              :mode="mode"
-              :read-allowed="false"
-              :value-can-be-empty="true"
-              @update:value="value.setInstanceLabels($event)"
-            />
-          </template>
-        </Labels>
+          :read-allowed="false"
+          :value-can-be-empty="true"
+          @update:value="value.setInstanceLabels($event)"
+        />
+      </Tab>
+
+      <Tab
+        name="annotations"
+        :label="t('harvester.tab.annotations')"
+        :weight="-11"
+      >
+        <Banner color="info">
+          <t k="harvester.virtualMachine.annotations.banner" />
+        </Banner>
+        <KeyValue
+          key="annotations"
+          :value="value.annotations"
+          :protected-keys="value.systemAnnotations || []"
+          :toggle-filter="toggler"
+          :add-label="t('labels.addAnnotation')"
+          :mode="mode"
+          :read-allowed="false"
+          :value-can-be-empty="true"
+          @update:value="value.setAnnotations($event)"
+        />
       </Tab>
 
       <Tab
         name="advanced"
         :label="t('harvester.tab.advanced')"
-        :weight="-9"
+        :weight="-12"
       >
         <div class="row mb-20">
           <div class="col span-6">
@@ -827,6 +887,7 @@ export default {
           ref="yamlEditor"
           :user-script="userScript"
           :mode="mode"
+          :os-type="osType"
           :view-code="isWindows"
           :namespace="value.metadata.namespace"
           :network-script="networkScript"

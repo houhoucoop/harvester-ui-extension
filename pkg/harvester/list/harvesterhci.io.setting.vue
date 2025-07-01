@@ -2,13 +2,12 @@
 import { mapGetters } from 'vuex';
 import { Banner } from '@components/Banner';
 import Loading from '@shell/components/Loading';
-import { VIEW_IN_API, DEV } from '@shell/store/prefs';
 import { MANAGEMENT } from '@shell/config/types';
 import { allHash } from '@shell/utils/promise';
 import Tabbed from '@shell/components/Tabbed/index.vue';
 import Tab from '@shell/components/Tabbed/Tab.vue';
 import Settings from '@pkg/harvester/components/SettingList.vue';
-import { HCI_ALLOWED_SETTINGS, HCI_SINGLE_CLUSTER_ALLOWED_SETTING } from '../config/settings';
+import { HCI_ALLOWED_SETTINGS, HCI_SINGLE_CLUSTER_ALLOWED_SETTING, HCI_SETTING } from '../config/settings';
 import { HCI } from '../types';
 
 export default {
@@ -21,14 +20,6 @@ export default {
   },
 
   async fetch() {
-    let isDev;
-
-    try {
-      isDev = this.$store.getters['prefs/get'](VIEW_IN_API);
-    } catch {
-      isDev = this.$store.getters['prefs/get'](DEV);
-    }
-
     const isSingleProduct = !!this.$store.getters['isSingleProduct'];
     const inStore = this.$store.getters['currentProduct'].inStore;
 
@@ -77,7 +68,7 @@ export default {
       };
 
       s.hide = s.canHide = (s.kind === 'json' || s.kind === 'multiline' || s.customFormatter === 'json' || s.data.customFormatter === 'json');
-      s.hasActions = !s.readOnly || isDev;
+      s.hasActions = s.id === HCI_SETTING.SERVER_VERSION ? true : !s.readOnly;
       initSettings.push(s);
     });
 
@@ -94,7 +85,7 @@ export default {
   },
 
   data() {
-    return { initSettings: [] };
+    return { initSettings: [], searchQuery: '' };
   },
 
   computed: {
@@ -125,7 +116,15 @@ export default {
         return {
           ...s,
           description: isHarvester ? `advancedSettings.descriptions.harv-${ s.id }` : `advancedSettings.descriptions.${ s.id }`,
-          customized:  (!s.readOnly && s.data.value && s.data.value !== s.data.default) || s.data.hasCustomized
+          customized:  (!s.readOnly && s.data.value && (
+            s.kind === 'json' ? (() => {
+              try {
+                return JSON.stringify(JSON.parse(s.data.value)) !== JSON.stringify(JSON.parse(s.data.default));
+              } catch {
+                return s.data.value !== s.data.default;
+              }
+            })() : s.data.value !== s.data.default
+          )) || s.data.hasCustomized
         };
       });
     }
@@ -144,9 +143,19 @@ export default {
         {{ t('harvester.setting.modifiedMessage') }}
       </div>
     </Banner>
-
+    <div class="fixed-header-actions harvester-settings-search">
+      <div class="search row">
+        <input
+          v-model="searchQuery"
+          type="search"
+          class="input-sm search-box"
+          :aria-label="t('sortableTable.searchLabel')"
+          :placeholder="t('sortableTable.search')"
+        >
+      </div>
+    </div>
     <Tabbed
-      class="mt-30"
+      class="mt-15"
     >
       <Tab
         name="advanced"
@@ -155,6 +164,7 @@ export default {
       >
         <Settings
           :settings="settings"
+          :search-query="searchQuery"
           category="advanced"
         />
       </Tab>
@@ -165,6 +175,7 @@ export default {
       >
         <Settings
           :settings="settings"
+          :search-query="searchQuery"
           category="ui"
         />
       </Tab>
@@ -176,4 +187,20 @@ export default {
 .settings-banner {
   margin-top: 0;
 }
+
+.harvester-settings-search {
+  padding: 0;
+}
+
+.search {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.search-box {
+  height: 40px;
+  margin-left: 10px;
+  min-width: 180px;
+}
+
 </style>

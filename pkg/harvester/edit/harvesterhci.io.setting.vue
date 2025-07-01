@@ -4,8 +4,10 @@ import { RadioGroup } from '@components/Form/Radio';
 import { LabeledInput } from '@components/Form/LabeledInput';
 import LabeledSelect from '@shell/components/form/LabeledSelect';
 import { TextAreaAutoGrow } from '@components/Form/TextArea';
-
+import UnitInput from '@shell/components/form/UnitInput';
 import CreateEditView from '@shell/mixins/create-edit-view';
+import { DOC } from '../config/doc-links';
+import { docLink } from '../utils/feature-flags';
 
 import { HCI_ALLOWED_SETTINGS, HCI_SINGLE_CLUSTER_ALLOWED_SETTING, HCI_SETTING } from '../config/settings';
 
@@ -15,7 +17,8 @@ export default {
     LabeledInput,
     LabeledSelect,
     RadioGroup,
-    TextAreaAutoGrow
+    TextAreaAutoGrow,
+    UnitInput
   },
 
   mixins: [CreateEditView],
@@ -57,7 +60,13 @@ export default {
 
     return {
       setting,
-      description:        isHarvester ? t(`advancedSettings.descriptions.harv-${ this.value.id }`) : t(`advancedSettings.descriptions.${ this.value.id }`),
+      description: isHarvester ? t(
+        `advancedSettings.descriptions.harv-${ this.value.id }`,
+        this.getDocLinkParams()
+      ) : t(
+        `advancedSettings.descriptions.${ this.value.id }`,
+        this.getDocLinkParams()
+      ),
       editHelp:           t(`advancedSettings.editHelp.${ this.value.id }`),
       enumOptions,
       canReset,
@@ -128,6 +137,13 @@ export default {
         await this.clusterRegistrationUrlTip();
       }
 
+      // remove any leading zeros (e.g. '0123' becomes 123)
+      if (this.setting.kind === 'number' && this.value.value) {
+        const num = Number(this.value.value);
+
+        this.value.value = isNaN(num) ? 0 : `${ num }`;
+      }
+
       this.save(done);
     },
 
@@ -163,6 +179,18 @@ export default {
       if (typeof this.$refs.settingComp?.useDefault === 'function') {
         this.$refs.settingComp.useDefault();
       }
+    },
+    getDocLinkParams() {
+      const setting = HCI_ALLOWED_SETTINGS[this.value.id] || HCI_SINGLE_CLUSTER_ALLOWED_SETTING[this.value.id];
+
+      if (setting?.docPath) {
+        const version = this.$store.getters['harvester-common/getServerVersion']();
+        const url = docLink(DOC[setting.docPath], version);
+
+        return { url };
+      }
+
+      return {};
     }
   }
 };
@@ -177,7 +205,7 @@ export default {
     :subtypes="[]"
     :can-yaml="false"
     :cancel-event="true"
-    @error="e => (errors = e)"
+    @error="e=>errors=e"
     @finish="saveSettings"
     @cancel="done"
   >
@@ -236,6 +264,13 @@ export default {
         <TextAreaAutoGrow
           v-model:value="value.value"
           :min-height="254"
+        />
+      </div>
+      <div v-else-if="setting.kind === 'number'">
+        <LabeledInput
+          v-model:value="value.value"
+          :label="t('advancedSettings.edit.value')"
+          type="number"
         />
       </div>
       <div v-else>

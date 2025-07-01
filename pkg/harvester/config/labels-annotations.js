@@ -15,6 +15,7 @@ export const HCI = {
   TEMPLATE_VERSION_CUSTOM_NAME:     'template-version.harvesterhci.io/customName',
   CREATOR:                          'harvesterhci.io/creator',
   OS:                               'harvesterhci.io/os',
+  GOLDEN_IMAGE:                     'harvesterhci.io/goldenImage',
   NETWORK_TYPE:                     'network.harvesterhci.io/type',
   VM_NAME:                          'harvesterhci.io/vmName',
   VM_NAME_PREFIX:                   'harvesterhci.io/vmNamePrefix',
@@ -34,6 +35,7 @@ export const HCI = {
   NODE_SCHEDULABLE:                 'kubevirt.io/schedulable',
   NETWORK_ROUTE:                    'network.harvesterhci.io/route',
   MATCHED_NODES:                    'network.harvesterhci.io/matched-nodes',
+  UPGRADE:                          'harvesterhci.io/upgrade',
   OS_UPGRADE_IMAGE:                 'harvesterhci.io/os-upgrade-image',
   LATEST_UPGRADE:                   'harvesterhci.io/latestUpgrade',
   UPGRADE_STATE:                    'harvesterhci.io/upgradeState',
@@ -49,6 +51,7 @@ export const HCI = {
   STORAGE_NETWORK:                  'storage-network.settings.harvesterhci.io',
   ADDON_EXPERIMENTAL:               'addon.harvesterhci.io/experimental',
   VOLUME_ERROR:                     'longhorn.io/volume-scheduling-error',
+  VOLUME_FOR_VM:                    'harvesterhci.io/volumeForVirtualMachine',
   KVM_AMD_CPU:                      'cpu-feature.node.kubevirt.io/svm',
   KVM_INTEL_CPU:                    'cpu-feature.node.kubevirt.io/vmx',
   NODE_MANUFACTURER:                'manufacturer',
@@ -64,4 +67,7 @@ export const HCI = {
   VM_DEVICE_ALLOCATION_DETAILS:     'harvesterhci.io/deviceAllocationDetails',
   SVM_BACKUP_ID:                    'harvesterhci.io/svmbackupId',
   DISABLE_LONGHORN_V2_ENGINE:       'node.longhorn.io/disable-v2-data-engine',
+  K8S_ARCH:                         'kubernetes.io/arch',
+  IMAGE_DISPLAY_NAME:               'harvesterhci.io/imageDisplayName',
+  CUSTOM_IP:                        'harvesterhci.io/custom-ip'
 };

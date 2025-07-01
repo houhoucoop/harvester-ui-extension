@@ -24,6 +24,7 @@ import {
   CONFIGURED_PROVIDERS,
   SUB_TYPE,
   ADDRESS,
+  DESCRIPTION,
 } from '@shell/config/table-headers';
 import { IF_HAVE } from '@shell/store/type-map';
 import {
@@ -31,7 +32,9 @@ import {
   FINGERPRINT,
   IMAGE_PROGRESS,
   SNAPSHOT_TARGET_VOLUME,
-  IMAGE_VIRTUAL_SIZE
+  IMAGE_VIRTUAL_SIZE,
+  IMAGE_STORAGE_CLASS,
+  HARVESTER_DESCRIPTION
 } from './table-headers';
 
 const TEMPLATE = HCI.VM_VERSION;
@@ -221,6 +224,8 @@ export function init($plugin, store) {
     STATE,
     NAME_COL,
     NAMESPACE_COL,
+    HARVESTER_DESCRIPTION,
+    IMAGE_STORAGE_CLASS,
     IMAGE_PROGRESS,
     IMAGE_DOWNLOAD_SIZE,
     IMAGE_VIRTUAL_SIZE,
@@ -253,7 +258,7 @@ export function init($plugin, store) {
   });
 
   if (isSingleVirtualCluster) {
-    headers(NAMESPACE, [STATE, NAME_UNLINKED, AGE]);
+    headers(NAMESPACE, [STATE, NAME_UNLINKED, DESCRIPTION, AGE]);
     basicType([NAMESPACE]);
     virtualType({
       labelKey:   'harvester.namespace.label',

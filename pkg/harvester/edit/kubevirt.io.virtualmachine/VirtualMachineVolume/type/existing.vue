@@ -11,6 +11,7 @@ import { _CREATE } from '@shell/config/query-params';
 import { HCI as HCI_ANNOTATIONS } from '@pkg/harvester/config/labels-annotations';
 import { HCI } from '../../../../types';
 import { VOLUME_TYPE, InterfaceOption } from '../../../../config/harvester-map';
+import { GIBIBYTE } from '../../../../utils/unit';
 
 export default {
   name: 'HarvesterEditExisting',
@@ -59,6 +60,7 @@ export default {
     }
 
     return {
+      GIBIBYTE,
       VOLUME_TYPE,
       InterfaceOption,
       loading: false,
@@ -109,6 +111,10 @@ export default {
               return false;
             }
 
+            if (pvc.isGoldenImageVolume) {
+              return false;
+            }
+
             if (pvc.attachVM && isAvailable && pvc.attachVM?.id === this.vm?.id && this.isEdit) {
               isBeingUsed = false;
             } else if (pvc.attachVM) {
@@ -136,10 +142,12 @@ export default {
         return;
       }
 
+      // update this.value with existing volume spec, then update to upstream component
       this.value.accessModes = pvcResource.spec.accessModes[0];
       this.value.size = pvcResource.spec.resources.requests.storage;
       this.value.storageClassName = pvcResource.spec.storageClassName;
       this.value.volumeMode = pvcResource.spec.volumeMode;
+      this.update();
     },
 
     'value.type'(neu) {
@@ -250,6 +258,7 @@ export default {
             :label="t('harvester.fields.size')"
             :mode="mode"
             :disabled="true"
+            :suffix="GIBIBYTE"
             @update:value="update"
           />
         </InputOrDisplay>

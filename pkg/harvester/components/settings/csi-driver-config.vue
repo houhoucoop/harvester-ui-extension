@@ -75,7 +75,11 @@ export default {
       const csiDrivers = this.$store.getters[`${ inStore }/all`](CSI_DRIVER) || [];
 
       return this.configArr.length >= csiDrivers.length;
-    }
+    },
+
+    allowEmptySnapshotClassNameFeatureEnabled() {
+      return this.$store.getters['harvester-common/getFeatureEnabled']('allowEmptySnapshotClassName');
+    },
   },
 
   methods: {
@@ -139,7 +143,7 @@ export default {
             errors.push(this.t('validation.required', { key: this.t('harvester.setting.csiDriverConfig.volumeSnapshotClassName') }, true));
           }
 
-          if (!config.value.backupVolumeSnapshotClassName) {
+          if (!this.allowEmptySnapshotClassNameFeatureEnabled && !config.value.backupVolumeSnapshotClassName) {
             errors.push(this.t('validation.required', { key: this.t('harvester.setting.csiDriverConfig.backupVolumeSnapshotClassName') }, true));
           }
         });
@@ -158,8 +162,16 @@ export default {
       this.configArr.splice(idx, 1);
     },
 
+    isBackupVolumeSnapshotRequired(driver) {
+      return driver === LONGHORN_DRIVER;
+    },
+
     disableEdit(driver) {
       return driver === LONGHORN_DRIVER;
+    },
+
+    isBackupVolumeSnapshotClassNameDisabled(driver) {
+      return driver === LONGHORN_DRIVER || this.allowEmptySnapshotClassNameFeatureEnabled;
     },
 
     add() {
@@ -184,6 +196,7 @@ export default {
     <InfoBox
       v-for="(driver, idx) in configArr"
       :key="idx"
+      class="box"
     >
       <button
         :disabled="disableEdit(driver.key)"
@@ -226,9 +239,9 @@ export default {
           <LabeledSelect
             v-model:value="driver.value.backupVolumeSnapshotClassName"
             :mode="mode"
-            required
-            :disabled="disableEdit(driver.key)"
+            :disabled="isBackupVolumeSnapshotClassNameDisabled(driver.key)"
             :options="getVolumeSnapshotOptions(driver.key)"
+            :required="isBackupVolumeSnapshotRequired(driver.key)"
             :label="t('harvester.setting.csiDriverConfig.backupVolumeSnapshotClassName')"
             @keydown.native.enter.prevent="()=>{}"
             @update:value="update"

@@ -28,17 +28,15 @@ export default class HciSetting extends HarvesterResource {
     }
 
     const schema = this.$getters['schemaFor'](HCI.UPGRADE);
+
     const hasUpgradeAccess = !!schema?.collectionMethods.find((x) => ['post'].includes(x.toLowerCase()));
 
     if (this.id === HCI_SETTING.SERVER_VERSION && hasUpgradeAccess) {
-      const latestUpgrade = this.$getters['all'](HCI.UPGRADE).find((upgrade) => upgrade.isLatestUpgrade);
-
       out.unshift({
         action:   'goToAirgapUpgrade',
         enabled:  true,
         icon:     'icon icon-refresh',
         label:    this.t('harvester.upgradePage.upgrade'),
-        disabled: !!latestUpgrade && !latestUpgrade?.isUpgradeSucceeded
       });
     }
 
@@ -111,15 +109,18 @@ export default class HciSetting extends HarvesterResource {
   }
 
   get parseValue() {
-    let parseDefaultValue = {};
-
     try {
-      parseDefaultValue = JSON.parse(this.value);
+      if (this.value) {
+        return JSON.parse(this.value);
+      } else if (this.default) {
+        return JSON.parse(this.default);
+      }
     } catch (err) {
-      parseDefaultValue = JSON.parse(this.default);
+      // eslint-disable-next-line no-console
+      console.error('Failed to parse setting value or default:', err);
     }
 
-    return parseDefaultValue;
+    return {};
   }
 
   get isS3() {

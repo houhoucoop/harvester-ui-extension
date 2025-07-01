@@ -7,8 +7,7 @@ import UnitInput from '@shell/components/form/UnitInput';
 import { LabeledInput } from '@components/Form/LabeledInput';
 import LabeledSelect from '@shell/components/form/LabeledSelect';
 import ModalWithCard from '@shell/components/ModalWithCard';
-
-import { PVC } from '@shell/config/types';
+import { PVC, STORAGE_CLASS } from '@shell/config/types';
 import { clone } from '@shell/utils/object';
 import { ucFirst, randomStr } from '@shell/utils/string';
 import { removeObject } from '@shell/utils/array';
@@ -17,6 +16,7 @@ import { PLUGIN_DEVELOPER, DEV } from '@shell/store/prefs';
 import { SOURCE_TYPE } from '../../../config/harvester-map';
 import { PRODUCT_NAME as HARVESTER_PRODUCT } from '../../../config/harvester';
 import { HCI } from '../../../types';
+import { VOLUME_MODE } from '@pkg/harvester/config/types';
 
 export default {
   emits: ['update:value'],
@@ -62,7 +62,7 @@ export default {
 
     customVolumeMode: {
       type:    String,
-      default: 'Block'
+      default: VOLUME_MODE.Block
     },
 
     customAccessMode: {
@@ -114,6 +114,12 @@ export default {
 
     isCreate() {
       return this.mode === _CREATE;
+    },
+
+    defaultStorageClass() {
+      const defaultStorage = this.$store.getters['harvester/all'](STORAGE_CLASS).find((sc) => sc.isDefault);
+
+      return defaultStorage;
     },
 
     showVolumeTip() {

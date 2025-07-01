@@ -1,6 +1,7 @@
 /**
  * Harvester
  */
+import { DESCRIPTION } from '@shell/config/table-headers';
 
 // image
 export const IMAGE_DOWNLOAD_SIZE = {
@@ -87,4 +88,19 @@ export const MACHINE_POOLS = {
   value:    'nodes.length',
   align:    'center',
   width:    100,
+};
+
+// The STORAGE_CLASS column in VM image list page
+export const IMAGE_STORAGE_CLASS = {
+  name:     'imageStorageClass',
+  labelKey: 'harvester.tableHeaders.storageClass',
+  sort:     'imageStorageClass',
+  value:    'imageStorageClass',
+  align:    'left',
+  width:    150,
+};
+
+export const HARVESTER_DESCRIPTION = {
+  ...DESCRIPTION,
+  width: 150,
 };

@@ -12,6 +12,7 @@ import { HCI } from '../types';
 import { PRODUCT_NAME as HARVESTER_PRODUCT } from '../config/harvester';
 import HarvesterResource from './harvester';
 import { CSI_SECRETS } from '@pkg/harvester/config/harvester-map';
+import { UNIT_SUFFIX } from '../utils/unit';
 
 const {
   CSI_PROVISIONER_SECRET_NAME,
@@ -42,6 +43,11 @@ export default class HciVmImage extends HarvesterResource {
 
     out = out.filter( (A) => !toFilter.includes(A.action));
 
+    // show `Clone` only when imageSource is `download`
+    if (this.imageSource !== 'download') {
+      out = out.filter(({ action }) => action !== 'goToClone');
+    }
+
     const schema = this.$getters['schemaFor'](HCI.VM);
     let canCreateVM = true;
 
@@ -49,35 +55,45 @@ export default class HciVmImage extends HarvesterResource {
       canCreateVM = false;
     }
 
-    return [
+    const customActions = this.isReady ? [
       {
         action:   'createFromImage',
         enabled:  canCreateVM,
         icon:     'icon icon-circle-plus',
         label:    this.t('harvester.action.createVM'),
-        disabled: !this.isReady,
       },
       {
         action:   'encryptImage',
         enabled:  this.volumeEncryptionFeatureEnabled && !this.isEncrypted,
         icon:     'icon icon-lock',
         label:    this.t('harvester.action.encryptImage'),
-        disabled: !this.isReady,
       },
       {
         action:   'decryptImage',
         enabled:  this.volumeEncryptionFeatureEnabled && this.isEncrypted,
         icon:     'icon icon-unlock',
         label:    this.t('harvester.action.decryptImage'),
-        disabled: !this.isReady,
       },
       {
-        action:  'download',
-        enabled: this.links?.download,
-        icon:    'icon icon-download',
-        label:   this.t('asyncButton.download.action'),
-      },
-      ...out
+        action:   'imageDownload',
+        enabled:  this.links?.download,
+        icon:     'icon icon-download',
+        label:    this.t('asyncButton.download.action'),
+      }
+    ] : [];
+
+    let filteredOut;
+
+    if (customActions.length > 0) {
+      filteredOut = out;
+    } else {
+      // if the first item is a divider, remove it from the array
+      filteredOut = out[0]?.divider ? out.slice(1) : out;
+    }
+
+    return [
+      ...customActions,
+      ...filteredOut
     ];
   }
 
@@ -199,6 +215,10 @@ export default class HciVmImage extends HarvesterResource {
     return `${ this.metadata.namespace }/${ this.spec.displayName }`;
   }
 
+  get imageStorageClass() {
+    return this?.metadata?.annotations?.[HCI_ANNOTATIONS.STORAGE_CLASS] || '';
+  }
+
   get imageMessage() {
     if (this.uploadError) {
       return ucFirst(this.uploadError);
@@ -239,8 +259,8 @@ export default class HciVmImage extends HarvesterResource {
     return formatSi(size, {
       increment:    1024,
       maxPrecision: 2,
-      suffix:       'B',
-      firstSuffix:  'B',
+      suffix:       UNIT_SUFFIX,
+      firstSuffix:  UNIT_SUFFIX,
     });
   }
 
@@ -254,8 +274,8 @@ export default class HciVmImage extends HarvesterResource {
     return formatSi(virtualSize, {
       increment:    1024,
       maxPrecision: 2,
-      suffix:       'B',
-      firstSuffix:  'B',
+      suffix:       UNIT_SUFFIX,
+      firstSuffix:  UNIT_SUFFIX,
     });
   }
 
@@ -290,7 +310,7 @@ export default class HciVmImage extends HarvesterResource {
   }
 
   get uploadImage() {
-    return async(file) => {
+    return async(file, opt = {}) => {
       const formData = new FormData();
 
       formData.append('chunk', file);
@@ -298,22 +318,23 @@ export default class HciVmImage extends HarvesterResource {
       try {
         this.$ctx.commit('harvester-common/uploadStart', this.metadata.name, { root: true });
 
-        await this.doAction('upload', formData, {
+        const result = await this.doAction('upload', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
             'File-Size':    file.size,
           },
           params: { size: file.size },
+          signal: opt.signal,
         });
+
+        return result;
       } catch (err) {
         this.$ctx.commit('harvester-common/uploadError', { name: this.name, message: err.message }, { root: true });
-
         this.$ctx.commit('harvester-common/uploadEnd', this.metadata.name, { root: true });
-
-        return Promise.reject(err);
+        throw err;
+      } finally {
+        this.$ctx.commit('harvester-common/uploadEnd', this.metadata.name, { root: true });
       }
-
-      this.$ctx.commit('harvester-common/uploadEnd', this.metadata.name, { root: true });
     };
   }
 
@@ -385,7 +406,23 @@ export default class HciVmImage extends HarvesterResource {
     return this.$rootGetters['harvester-common/getFeatureEnabled']('volumeEncryption');
   }
 
-  download() {
+  get thirdPartyStorageFeatureEnabled() {
+    return this.$rootGetters['harvester-common/getFeatureEnabled']('thirdPartyStorage');
+  }
+
+  imageDownload(resources = this) {
+    // spec.backend is introduced in v1.5.0. If it's not set, it's an old image can be downloaded via link
+    if (this.spec?.backend === 'cdi') {
+      this.$dispatch('promptModal', {
+        resources,
+        component: 'HarvesterImageDownloader'
+      });
+    } else {
+      this.downloadViaLink();
+    }
+  }
+
+  downloadViaLink() {
     window.location.href = this.links.download;
   }
 }

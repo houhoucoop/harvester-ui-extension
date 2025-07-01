@@ -57,6 +57,10 @@ export default {
             if (!!pvc.metadata?.annotations?.[HCI_ANNOTATIONS.IMAGE_ID]) {
               return false;
             }
+            // we won't show golden image volume in the hot plug volume modal
+            if (pvc.isGoldenImageVolume) {
+              return false;
+            }
 
             return !pvc.attachVM;
           })
@@ -137,6 +141,12 @@ export default {
         class="mt-20"
         required
       />
+      <Banner
+        v-for="(err, i) in errors"
+        :key="i"
+        :label="err"
+        color="error"
+      />
     </template>
 
     <template #actions>
@@ -156,11 +166,6 @@ export default {
             @click="save"
           />
         </div>
-
-        <Banner
-          v-for="(err, i) in errors"
-          :key="i"
-        />
       </div>
     </template>
   </Card>

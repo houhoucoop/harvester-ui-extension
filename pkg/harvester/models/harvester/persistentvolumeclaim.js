@@ -46,22 +46,37 @@ export default class HciPv extends HarvesterResource {
       }
     }
 
-    if (!this.isLonghorn || !this.isLonghornV2) {
+    const exportImageAction = {
+      action:  'exportImage',
+      enabled: this.hasAction('export') && !this.isEncrypted,
+      icon:    'icon icon-copy',
+      label:   this.t('harvester.action.exportImage')
+    };
+    const takeSnapshotAction = {
+      action:  'snapshot',
+      enabled: this.hasAction('snapshot'),
+      icon:    'icon icon-backup',
+      label:   this.t('harvester.action.snapshot'),
+    };
+
+    if (this.thirdPartyStorageFeatureEnabled) { // v1.5.0
       out = [
-        {
-          action:  'exportImage',
-          enabled: this.hasAction('export') && !this.isEncrypted,
-          icon:    'icon icon-copy',
-          label:   this.t('harvester.action.exportImage')
-        },
-        {
-          action:  'snapshot',
-          enabled: this.hasAction('snapshot'),
-          icon:    'icon icon-backup',
-          label:   this.t('harvester.action.snapshot'),
-        },
+        exportImageAction,
+        takeSnapshotAction,
         ...out
       ];
+      // TODO: remove this block if Longhorn V2 engine supports restore volume snapshot
+      if (this.isLonghornV2) {
+        out = out.filter((action) => action.action !== takeSnapshotAction.action);
+      }
+    } else { // v1.4 / v1.3
+      if (!this.isLonghorn || !this.isLonghornV2) {
+        out = [
+          exportImageAction,
+          takeSnapshotAction,
+          ...out
+        ];
+      }
     }
 
     return [
@@ -321,14 +336,30 @@ export default class HciPv extends HarvesterResource {
     return this.volumeProvider === LONGHORN_DRIVER;
   }
 
+  get isLonghornV1() {
+    return this.isLonghorn && !this.isLonghornV2;
+  }
+
   get isLonghornV2() {
     return this.dataEngine === DATA_ENGINE_V2;
+  }
+
+  get isGoldenImageVolume() {
+    return this?.metadata?.annotations?.[HCI_ANNOTATIONS.GOLDEN_IMAGE] === 'true';
+  }
+
+  get thirdPartyStorageFeatureEnabled() {
+    return this.$rootGetters['harvester-common/getFeatureEnabled']('thirdPartyStorage');
   }
 
   get resourceExternalLink() {
     const host = window.location.host;
     const { params } = this.currentRoute();
     const volumeName = this.spec?.volumeName;
+
+    if (!this.isLonghorn) {
+      return null;
+    }
 
     if (!volumeName) {
       return null;

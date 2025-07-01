@@ -25,6 +25,8 @@ import { HCI_SETTING } from '../../config/settings';
 import { HCI } from '../../types';
 import { parseVolumeClaimTemplates } from '../../utils/vm';
 import impl, { QGA_JSON, USB_TABLET } from './impl';
+import { GIBIBYTE } from '../../utils/unit';
+import { VOLUME_MODE } from '@pkg/harvester/config/types';
 
 const LONGHORN_V2_DATA_ENGINE = 'longhorn-system/v2-data-engine';
 
@@ -138,6 +140,7 @@ export default {
     return {
       OS,
       isClone,
+      showYaml:                      false,
       spec:                          null,
       osType:                        'linux',
       sshKey:                        [],
@@ -154,6 +157,7 @@ export default {
       diskRows:                      [],
       networkRows:                   [],
       machineType:                   '',
+      machineTypes:                  [],
       secretName:                    '',
       secretRef:                     null,
       showAdvanced:                  false,
@@ -243,12 +247,6 @@ export default {
       });
     },
 
-    defaultStorageClass() {
-      const defaultStorage = this.$store.getters[`${ this.inStore }/all`](STORAGE_CLASS).find( (O) => O.isDefault);
-
-      return defaultStorage;
-    },
-
     storageClassSetting() {
       try {
         const storageClassValue = this.$store.getters[`${ this.inStore }/all`](HCI.SETTING).find( (O) => O.id === HCI_SETTING.DEFAULT_STORAGE_CLASS)?.value;
@@ -260,7 +258,7 @@ export default {
     },
 
     customVolumeMode() {
-      return this.storageClassSetting.volumeMode || 'Block';
+      return this.storageClassSetting.volumeMode || VOLUME_MODE.BLOCK;
     },
 
     customAccessMode() {
@@ -273,7 +271,7 @@ export default {
 
     needNewSecret() {
       // When creating a template it is always necessary to create a new secret.
-      return this.resourceType === HCI.VM_VERSION || this.isCreate;
+      return this.showYaml ? false : this.resourceType === HCI.VM_VERSION || this.isCreate;
     },
 
     defaultTerminationSetting() {
@@ -298,6 +296,20 @@ export default {
 
   async created() {
     await this.$store.dispatch(`${ this.inStore }/findAll`, { type: SECRET });
+
+    if (this.value.vmMachineTypesFeatureEnabled) {
+      try {
+        const url = this.$store.getters['harvester-common/getHarvesterClusterUrl']('v1/harvester/clusters/local?link=machineTypes');
+        const machineTypes = await this.$store.dispatch('harvester/request', { url });
+
+        this.machineTypes = machineTypes;
+      } catch (err) {
+        this.machineTypes = [''];
+      }
+    } else {
+      this.machineTypes = [''];
+    }
+
     this.getInitConfig({ value: this.value, init: this.isCreate });
   },
 
@@ -334,7 +346,8 @@ export default {
       const maintenanceStrategy = vm.metadata.labels?.[HCI_ANNOTATIONS.VM_MAINTENANCE_MODE_STRATEGY] || 'Migrate';
 
       const runStrategy = spec.runStrategy || 'RerunOnFailure';
-      const machineType = value.machineType;
+      const machineType = spec.template.spec.domain?.machine?.type || this.machineTypes[0];
+
       const cpu = spec.template.spec.domain?.cpu?.cores;
       const memory = spec.template.spec.domain.resources.limits.memory;
       const reservedMemory = vm.metadata?.annotations?.[HCI_ANNOTATIONS.VM_RESERVED_MEMORY];
@@ -448,7 +461,7 @@ export default {
           if (!isIsoImage) {
             imageSizeGiB = Math.max(imageSizeGiB, 10);
           }
-          size = `${ imageSizeGiB }Gi`;
+          size = `${ imageSizeGiB }${ GIBIBYTE }`;
         }
 
         out.push({
@@ -462,7 +475,7 @@ export default {
           type,
           storageClassName: '',
           image:            this.imageId,
-          volumeMode:       'Block',
+          volumeMode:       VOLUME_MODE.BLOCK,
           isEncrypted,
           volumeBackups,
         });
@@ -521,7 +534,7 @@ export default {
               accessMode = pvcResource?.spec?.accessModes?.[0] || 'ReadWriteMany';
               size = pvcResource?.spec?.resources?.requests?.storage || '10Gi';
               storageClassName = pvcResource?.spec?.storageClassName;
-              volumeMode = pvcResource?.spec?.volumeMode || 'Block';
+              volumeMode = pvcResource?.spec?.volumeMode || VOLUME_MODE.BLOCK;
               volumeName = pvcResource?.metadata?.name || '';
             }
 
@@ -558,7 +571,7 @@ export default {
             volumeName,
             container,
             accessMode,
-            size:       `${ formatSize }Gi`,
+            size:       `${ formatSize }${ GIBIBYTE }`,
             volumeMode: volumeMode || this.customVolumeMode,
             image,
             type,
@@ -673,7 +686,7 @@ export default {
         }
       });
 
-      if (!this.secretName || this.needNewSecret) {
+      if (this.needNewSecret || !this.secretName) {
         this.secretName = this.generateSecretName(this.secretNamePrefix);
       }
 
@@ -875,7 +888,7 @@ export default {
         }
       }
 
-      if (out.length === 0 && !!this.spec.template.spec.accessCredentials) {
+      if (out.length === 0 && !!this.spec.template.spec.accessCredentials === false) {
         delete this.spec.template.spec.accessCredentials;
       } else {
         this.spec.template.spec.accessCredentials = out;
@@ -900,8 +913,8 @@ export default {
     },
 
     /**
-     * Generate user data yaml which is decide by the "Install guest agent",
-     * "OS type", "SSH Keys" and user input.
+     * Generate user data yaml which is decided by the
+     * "Install guest agent", "OS type", "SSH keys" and user input.
      * @param config
      */
     getUserData(config) {
@@ -925,7 +938,9 @@ export default {
           return undefined;
         }
 
-        return userDataYaml;
+        const hasCloudComment = this.hasCloudConfigComment(userDataYaml);
+
+        return hasCloudComment ? userDataYaml : `#cloud-config\n${ userDataYaml }`;
       } catch (e) {
         console.error('Error: Unable to parse yaml document', e); // eslint-disable-line no-console
 
@@ -973,7 +988,7 @@ export default {
 
     parseVolumeClaimTemplate(R, dataVolumeName) {
       if (!String(R.size).includes('Gi') && R.size) {
-        R.size = `${ R.size }Gi`;
+        R.size = `${ R.size }${ GIBIBYTE }`;
       }
 
       const out = {
@@ -1218,7 +1233,6 @@ export default {
 
       let secret = this.getSecret(vm.spec);
 
-      // const userData = this.getUserData({ osType: this.osType, installAgent: this.installAgent });
       if (!secret && this.isEdit && this.secretRef) {
         // When editing the vm, if the userData and networkData are deleted, we also need to clean up the secret values
         secret = this.secretRef;
@@ -1447,7 +1461,6 @@ export default {
           sshAuthorizedKeys.splice(index, 1);
         }
       });
-
       const userDataJson = this.convertToJson(this.userScript);
 
       userDataJson.ssh_authorized_keys = sshAuthorizedKeys;
@@ -1536,6 +1549,7 @@ export default {
       if (val) {
         this['sshKey'] = [];
         this['userScript'] = undefined;
+        this['networkScript'] = undefined;
         this['installAgent'] = false;
       }
     },
@@ -1583,19 +1597,9 @@ export default {
        */
       handler(neu) {
         if (this.deleteAgent) {
-          let out = this.getUserData({
+          this['userScript'] = this.getUserData({
             installAgent: neu, osType: this.osType, deletePackage: this.deletePackage
           });
-
-          if (neu) {
-            const hasCloudComment = this.hasCloudConfigComment(out);
-
-            if (!hasCloudComment) {
-              out = `#cloud-config\n${ out }`;
-            }
-          }
-
-          this['userScript'] = out;
           this.refreshYamlEditor();
         }
         this.deleteAgent = true;
@@ -1603,8 +1607,9 @@ export default {
       }
     },
 
-    osType(neu) {
-      const out = this.getUserData({ installAgent: this.installAgent, osType: neu });
+    osType(neu, old) {
+      this.installAgent = old === 'windows' ? true : this.installAgent;
+      const out = old === 'windows' ? this.getInitUserData({ osType: neu }) : this.getUserData({ installAgent: this.installAgent, osType: neu });
 
       this['userScript'] = out;
       this.refreshYamlEditor();
@@ -1622,9 +1627,14 @@ export default {
     sshKey(neu, old) {
       const _diff = difference(old, neu);
 
-      if (_diff.length && this.isEdit) {
+      // delete removed ssh key in userdata if needed
+      if (_diff.length > 0 && this.isCreate) {
         this.deleteSSHFromUserData(_diff);
       }
+
+      // refresh yaml editor to get the latest userScript
+      this.userScript = this.getUserData({ installAgent: this.installAgent, osType: this.osType });
+      this.refreshYamlEditor();
     }
   }
 };

@@ -80,7 +80,7 @@ export default {
       });
 
       const devices = [
-        ...this.otherDevices(this.value.domain.devices.hostDevices || []),
+        ...this.otherDevices(this.value?.domain?.devices?.hostDevices || []),
         ...formatted,
       ];
 
@@ -121,7 +121,9 @@ export default {
           return inUse;
         }
 
-        vm.hostDevices.forEach((device) => {
+        const hostDevices = vm?.hostDevices || [];
+
+        hostDevices.forEach((device) => {
           inUse[device.name] = { usedBy: [vm.metadata.name] };
         });
 

@@ -131,11 +131,12 @@ export default class VirtVm extends HarvesterResource {
         label:   this.t('harvester.action.unpause')
       },
       {
-        action:   'restartVM',
-        enabled:  !!this.actions?.restart,
-        icon:     'icon icon-refresh',
-        label:    this.t('harvester.action.restart'),
-        bulkable: true
+        action:     'restartVM',
+        enabled:    !!this.actions?.restart,
+        icon:       'icon icon-refresh',
+        label:      this.t('harvester.action.restart'),
+        bulkable:   true,
+        bulkAction: 'restartVM'
       },
       {
         action:  'softrebootVM',
@@ -158,7 +159,7 @@ export default class VirtVm extends HarvesterResource {
       },
       {
         action:  'takeVMSnapshot',
-        enabled: !!this.actions?.backup && !this.longhornV2Volumes.length,
+        enabled: (!!this.actions?.snapshot || !!this.action?.backup) && !this.longhornV2Volumes.length,
         icon:    'icon icon-snapshot',
         label:   this.t('harvester.action.vmSnapshot')
       },
@@ -233,7 +234,7 @@ export default class VirtVm extends HarvesterResource {
     const spec = {
       runStrategy: 'RerunOnFailure',
       template:    {
-        metadata: { annotations: {} },
+        metadata: { annotations: {}, labels: {} },
         spec:     {
           domain: {
             machine: { type: '' },
@@ -283,6 +284,7 @@ export default class VirtVm extends HarvesterResource {
 
     if (realMode !== _CLONE) {
       this.metadata['annotations'] = { [HCI_ANNOTATIONS.VOLUME_CLAIM_TEMPLATE]: '[]' };
+      this.metadata['labels'] = {};
       this['spec'] = spec;
     }
   }
@@ -311,12 +313,22 @@ export default class VirtVm extends HarvesterResource {
     this.metadata.annotations[HCI_ANNOTATIONS.VOLUME_CLAIM_TEMPLATE] = JSON.stringify(deleteDataSource);
   }
 
-  restartVM() {
-    this.doActionGrowl('restart', {});
+  restartVM(resources = this) {
+    this.$dispatch('promptModal', {
+      resources,
+      action:            'restart',
+      warningMessageKey: 'dialog.confirmExecution.restart.message',
+      component:         'ConfirmExecutionDialog'
+    });
   }
 
-  softrebootVM() {
-    this.doActionGrowl('softreboot', {});
+  softrebootVM(resources = this) {
+    this.$dispatch('promptModal', {
+      resources,
+      action:            'softreboot',
+      warningMessageKey: 'dialog.confirmExecution.softreboot.message',
+      component:         'ConfirmExecutionDialog'
+    });
   }
 
   openLogs() {
@@ -700,8 +712,25 @@ export default class VirtVm extends HarvesterResource {
     return null;
   }
 
-  get isBeingStopped() {
-    if (this && !this.isVMExpectedRunning && this.isVMCreated && this.vmi?.status?.phase !== VMIPhase.Succeeded) {
+  get isPending() {
+    if (this &&
+      !this.isVMExpectedRunning &&
+      this.isVMCreated &&
+      this.vmi?.status?.phase === VMIPhase.Pending
+    ) {
+      return { status: VMIPhase.Pending };
+    }
+
+    return null;
+  }
+
+  get isStopping() {
+    if (this &&
+      !this.isVMExpectedRunning &&
+      this.isVMCreated &&
+      this.vmi?.status?.phase !== VMIPhase.Succeeded &&
+      this.vmi?.status?.phase !== VMIPhase.Pending
+    ) {
       return { status: STOPPING };
     }
 
@@ -736,7 +765,7 @@ export default class VirtVm extends HarvesterResource {
   }
 
   get isUnschedulable() {
-    if (this.isBeingStopped || this.isStarting) {
+    if (this.isStopping || this.isStarting) {
       const condition = this.status?.conditions?.find((c) => c.reason === UNSCHEDULABLE);
 
       if (!!condition) {
@@ -852,7 +881,8 @@ export default class VirtVm extends HarvesterResource {
       this.isUnschedulable?.status ||
       this.isPaused?.status ||
       this.isVMError?.status ||
-      this.isBeingStopped?.status ||
+      this.isPending?.status ||
+      this.isStopping?.status ||
       this.isOff?.status ||
       this.isError?.status ||
       this.isRunning?.status ||
@@ -1181,6 +1211,14 @@ export default class VirtVm extends HarvesterResource {
 
   get efiPersistentStateFeatureEnabled() {
     return this.$rootGetters['harvester-common/getFeatureEnabled']('efiPersistentState');
+  }
+
+  get thirdPartyStorageFeatureEnabled() {
+    return this.$rootGetters['harvester-common/getFeatureEnabled']('thirdPartyStorage');
+  }
+
+  get vmMachineTypesFeatureEnabled() {
+    return this.$rootGetters['harvester-common/getFeatureEnabled']('vmMachineTypes');
   }
 
   setInstanceLabels(val) {
