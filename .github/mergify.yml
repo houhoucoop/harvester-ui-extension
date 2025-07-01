@@ -1,7 +1,7 @@
 pull_request_rules:
 - name: Automatically open backport PR to release-harvester-v1.6
   conditions:
-    - base=main
+    - base=enhancement/backport-ci
     - label="require backport/v1.6"
     - merged
   actions:
