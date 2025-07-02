@@ -1,7 +1,7 @@
 name: "[PR Management] Add Backport Label"
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, reopened]
     branches: [main]
 
@@ -53,7 +53,7 @@ jobs:
       - name: Add backport label if needed
         if: steps.fetch_info.outputs.should_label == 'true' && !contains(steps.fetch_info.outputs.pr_labels, steps.fetch_info.outputs.backport_label)
         env:
-          GH_TOKEN: ${{ secrets.ADMIN_PAT }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Adding label: ${{ steps.fetch_info.outputs.backport_label }}"
           gh pr edit ${{ github.event.pull_request.number }} \
