@@ -3,7 +3,7 @@ name: "[PR Management] Add Backport Label"
 on:
   pull_request:
     types: [opened, reopened]
-    branches: [main]
+    branches: [enhancement/backport-ci-2]
 
 permissions:
   pull-requests: write
