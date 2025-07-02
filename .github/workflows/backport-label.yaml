@@ -53,7 +53,7 @@ jobs:
       - name: Add backport label if needed
         if: steps.fetch_info.outputs.should_label == 'true' && !contains(steps.fetch_info.outputs.pr_labels, steps.fetch_info.outputs.backport_label)
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.ADMIN_PAT }}
         run: |
           echo "Adding label: ${{ steps.fetch_info.outputs.backport_label }}"
           gh api -X POST repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/labels \
