@@ -1,0 +1,24 @@
+name: Backport Workflow
+
+on:
+  pull_request:
+    types: [opened, reopened, closed]
+    branches: [enhancement/backport-ci]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  auto-backport-label:
+    if: contains(['opened', 'reopened'], github.event.action)
+    uses: ./.github/actions/backport/add-label.yaml
+    with:
+      pr_number: ${{ github.event.pull_request.number }}
+      repo: ${{ github.repository }}
+
+  request-backport:
+    if: github.event.action == 'closed' && github.event.pull_request.merged == true
+    uses: ./.github/actions/backport/request-pr.yaml
+    with:
+      pr_number: ${{ github.event.pull_request.number }}
+      repo: ${{ github.repository }}

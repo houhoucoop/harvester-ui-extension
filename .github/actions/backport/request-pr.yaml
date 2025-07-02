@@ -1,0 +1,46 @@
+name: Request Backport
+
+on:
+  workflow_call:
+    inputs:
+      pr_number:
+        required: true
+        type: number
+      repo:
+        required: true
+        type: string
+
+jobs:
+  comment-backport:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Post backport command comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ inputs.pr_number }}
+          REPO: ${{ inputs.repo }}
+        run: |
+          set -euo pipefail
+
+          labels=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json labels --jq '.labels[].name')
+
+          versions=$(echo "$labels" | grep -oE '^require backport/v[0-9]+\.[0-9]+$' | sed -E 's/^require backport\/v//' | sort -u)
+
+          if [[ -z "$versions" ]]; then
+            echo "No backport labels found, skipping comment."
+            exit 0
+          fi
+
+          branches=""
+          for v in $versions; do
+            branches+="release-harvester-v$v "
+          done
+
+          cmd="@Mergifyio backport ${branches}"
+
+          echo "Posting comment: $cmd"
+
+          gh pr comment "$PR_NUMBER" --repo "$REPO" --body "$cmd"

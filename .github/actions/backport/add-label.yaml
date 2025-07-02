@@ -1,9 +1,14 @@
 name: Auto Backport Label
 
 on:
-  pull_request:
-    types: [opened, reopened]
-    branches: [main]
+  workflow_call:
+    inputs:
+      pr_number:
+        required: true
+        type: number
+      repo:
+        required: true
+        type: string
 
 jobs:
   add-backport-label:
@@ -16,10 +21,12 @@ jobs:
         id: fetch_info
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ inputs.repo }}
+          PR_NUMBER: ${{ inputs.pr_number }}
         run: |
           set -euo pipefail
 
-          branches=$(gh api repos/${{ github.repository }}/branches --paginate --jq '.[].name')
+          branches=$(gh api repos/$REPO/branches --paginate --jq '.[].name')
           release_branches=$(echo "$branches" | grep -E '^release-harvester-v[0-9]+\.[0-9]+$' || true)
 
           if [[ -z "$release_branches" ]]; then
@@ -35,7 +42,7 @@ jobs:
           version_with_patch="${version}.0"
           echo "Checking for tag: v${version_with_patch}"
 
-          tags=$(gh api repos/${{ github.repository }}/releases --paginate --jq '.[].tag_name')
+          tags=$(gh api repos/$REPO/releases --paginate --jq '.[].tag_name')
           exact_match=$(echo "$tags" | grep -Fx "v${version_with_patch}" || true)
 
           if [[ -n "$exact_match" ]]; then
@@ -47,8 +54,7 @@ jobs:
             echo "backport_label=require backport/v${version}" >> $GITHUB_OUTPUT
           fi
 
-          pr_number=${{ github.event.pull_request.number }}
-          pr_labels=$(gh pr view "$pr_number" --json labels --jq '.labels[].name' || echo "")
+          pr_labels=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json labels --jq '.labels[].name' || echo "")
           echo "pr_labels=$pr_labels" >> $GITHUB_OUTPUT
 
       - name: Add backport label if needed
