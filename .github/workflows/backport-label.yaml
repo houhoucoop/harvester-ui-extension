@@ -52,7 +52,10 @@ jobs:
 
       - name: Add backport label if needed
         if: steps.fetch_info.outputs.should_label == 'true' && !contains(steps.fetch_info.outputs.pr_labels, steps.fetch_info.outputs.backport_label)
-        uses: actions-ecosystem/action-add-labels@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          labels: ${{ steps.fetch_info.outputs.backport_label }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Adding label: ${{ steps.fetch_info.outputs.backport_label }}"
+          gh pr edit ${{ github.event.pull_request.number }} \
+            --repo ${{ github.repository }} \
+            --add-label "${{ steps.fetch_info.outputs.backport_label }}"
