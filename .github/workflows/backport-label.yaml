@@ -56,5 +56,6 @@ jobs:
           GH_TOKEN: ${{ secrets.ADMIN_PAT }}
         run: |
           echo "Adding label: ${{ steps.fetch_info.outputs.backport_label }}"
-          gh api -X POST repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/labels \
-            -f labels='["${{ steps.fetch_info.outputs.backport_label }}"]'
+          gh pr edit ${{ github.event.pull_request.number }} \
+            --repo ${{ github.repository }} \
+            --add-label "${{ steps.fetch_info.outputs.backport_label }}"
