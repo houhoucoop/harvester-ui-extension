@@ -9,6 +9,7 @@ permissions:
 
 jobs:
   auto-assign:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
     - uses: rancher/gh-issue-mgr/auto-assign-action@main
