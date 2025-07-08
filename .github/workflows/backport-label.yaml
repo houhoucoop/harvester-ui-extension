@@ -81,7 +81,7 @@ jobs:
           echo "TARGET_BRANCH=$TARGET_BRANCH" >> $GITHUB_OUTPUT
 
       - name: Add label if needed
-        if: steps.check.outputs.IS_MERGIFY == 'true' && startsWith(steps.check.outputs.TARGET_BRANCH, 'release-harvester-v')
+        if: startsWith(steps.check.outputs.TARGET_BRANCH, 'release-harvester-v')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
