@@ -63,10 +63,6 @@ export default {
   },
 
   computed: {
-    inStore() {
-      return this.$store.getters['currentProduct'].inStore;
-    },
-
     allErrors() {
       const errors = [];
 
@@ -83,7 +79,9 @@ export default {
     csiDrivers() {
       if (this.fetchError) return [];
 
-      return this.$store.getters[`${ this.inStore }/all`](CSI_DRIVER) || [];
+      const inStore = this.$store.getters['currentProduct'].inStore;
+
+      return this.$store.getters[`${ inStore }/all`](CSI_DRIVER) || [];
     },
 
     provisioners() {
