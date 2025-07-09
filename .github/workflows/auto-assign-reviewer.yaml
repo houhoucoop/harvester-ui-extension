@@ -14,5 +14,4 @@ jobs:
     steps:
       - uses: rancher/gh-issue-mgr/auto-assign-action@main
         with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
           configuration-path: .github/auto-assign-config.yaml
