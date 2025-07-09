@@ -1101,6 +1101,7 @@ harvester:
     csiOnlineExpandValidation:
       provisioner: Provisioner
       value: Value
+      invalidJsonFormat: "Configuration value is not a valid JSON format: {error}"
     containerdRegistry:
       mirrors:
         mirrors: Mirrors

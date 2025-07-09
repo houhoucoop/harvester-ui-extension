@@ -2,6 +2,7 @@
 import { _EDIT } from '@shell/config/query-params';
 import LabeledSelect from '@shell/components/form/LabeledSelect';
 import InfoBox from '@shell/components/InfoBox';
+import { Banner } from '@components/Banner';
 import { allHash } from '@shell/utils/promise';
 import { CSI_DRIVER } from '../../types';
 import { LONGHORN_DRIVER } from '@shell/config/types';
@@ -10,6 +11,7 @@ export default {
   name: 'CSIOnlineExpandValidation',
 
   components: {
+    Banner,
     InfoBox,
     LabeledSelect,
   },
@@ -36,12 +38,16 @@ export default {
   },
 
   data() {
-    const initValue = this.value.value || this.value.default || '{}';
-
-    return { configArr: this.parseValue(initValue) };
+    return {
+      configArr:  [],
+      parseError: null,
+    };
   },
 
   created() {
+    const initValue = this.value.value || this.value.default || '{}';
+
+    this.configArr = this.parseValue(initValue);
     this.registerBeforeHook?.(this.willSave, 'willSave');
   },
 
@@ -70,22 +76,47 @@ export default {
     },
 
     disableAdd() {
-      return this.configArr.length >= this.csiDrivers.length;
+      return this.parseError || this.configArr.length >= this.csiDrivers.length;
     },
   },
 
+  watch: {
+    'value.value'(newVal, oldVal) {
+      if (newVal !== oldVal) {
+        this.configArr = this.parseValue(newVal || '{}');
+      }
+    }
+  },
+
   methods: {
+    _convertToBoolean(value) {
+      if (typeof value === 'boolean') return value;
+
+      if (typeof value === 'string') {
+        const lowerCaseValue = value.toLowerCase();
+
+        if (lowerCaseValue === 'true') return true;
+        if (lowerCaseValue === 'false') return false;
+      }
+
+      return false; // default to false for any other string or non-boolean type
+    },
     parseValue(raw) {
       try {
         const json = JSON.parse(raw);
 
+        this.parseError = null;
+
         return Object.entries(json).map(([key, value]) => ({
           key,
-          value: value === 'true' ? true : value === 'false' ? false : value,
+          value: this._convertToBoolean(value),
         }));
-      } catch {
-        // eslint-disable-next-line no-console
-        console.warn('[CSIOnlineExpandValidation] Invalid JSON:', raw);
+      } catch (e) {
+        this.parseError = this.t(
+          'harvester.setting.csiOnlineExpandValidation.invalidJsonFormat',
+          { error: e.message },
+          true
+        );
 
         return [];
       }
@@ -151,6 +182,13 @@ export default {
 
 <template>
   <div>
+    <Banner
+      v-if="parseError"
+      color="error"
+      class="mb-20"
+    >
+      {{ parseError }}
+    </Banner>
     <InfoBox
       v-for="(driver, idx) in configArr"
       :key="idx"
