@@ -34,13 +34,24 @@ export default {
   async fetch() {
     const inStore = this.$store.getters['currentProduct'].inStore;
 
-    await allHash({ csiDrivers: this.$store.dispatch(`${ inStore }/findAll`, { type: CSI_DRIVER }) });
+    try {
+      await allHash({ csiDrivers: this.$store.dispatch(`${ inStore }/findAll`, { type: CSI_DRIVER }) });
+      this.fetchError = null;
+    } catch (error) {
+      console.error('Failed to fetch CSI drivers:', error); // eslint-disable-line no-console
+      this.fetchError = this.t(
+        'harvester.setting.csiOnlineExpandValidation.failedToLoadDrivers',
+        { error: error.message || error },
+        true
+      );
+    }
   },
 
   data() {
     return {
       configArr:  [],
       parseError: null,
+      fetchError: null,
     };
   },
 
@@ -56,7 +67,22 @@ export default {
       return this.$store.getters['currentProduct'].inStore;
     },
 
+    allErrors() {
+      const errors = [];
+
+      if (this.fetchError) {
+        errors.push(this.fetchError);
+      }
+      if (this.parseError) {
+        errors.push(this.parseError);
+      }
+
+      return errors;
+    },
+
     csiDrivers() {
+      if (this.fetchError) return [];
+
       return this.$store.getters[`${ this.inStore }/all`](CSI_DRIVER) || [];
     },
 
@@ -76,8 +102,12 @@ export default {
     },
 
     disableAdd() {
-      return this.parseError || this.configArr.length >= this.csiDrivers.length;
+      return this.parseError || this.fetchError || this.configArr.length >= this.csiDrivers.length;
     },
+
+    disableConfigEditing() {
+      return this.parseError || this.fetchError;
+    }
   },
 
   watch: {
@@ -112,6 +142,7 @@ export default {
           value: this._convertToBoolean(value),
         }));
       } catch (e) {
+        console.error('[CSIOnlineExpandValidation] JSON Parsing Error:', raw, e); // eslint-disable-line no-console
         this.parseError = this.t(
           'harvester.setting.csiOnlineExpandValidation.invalidJsonFormat',
           { error: e.message },
@@ -152,25 +183,31 @@ export default {
       return errors.length ? Promise.reject(errors) : Promise.resolve();
     },
 
-    disableEdit(driverKey) {
-      return driverKey === LONGHORN_DRIVER;
-    },
-
-    add() {
-      this.configArr.push({ key: '', value: true });
-    },
-
-    remove(index) {
-      this.configArr.splice(index, 1);
-      this.update();
-    },
-
     useDefault() {
       this.configArr = this.parseValue(this.value.default || '{}');
       this.update();
     },
 
+    disableEdit(driverKey) {
+      return this.fetchError || driverKey === LONGHORN_DRIVER;
+    },
+
+    add() {
+      if (this.disableConfigEditing) return;
+
+      this.configArr.push({ key: '', value: true });
+    },
+
+    remove(index) {
+      if (this.disableConfigEditing) return;
+
+      this.configArr.splice(index, 1);
+      this.update();
+    },
+
     onValueChange(idx, newVal) {
+      if (this.disableConfigEditing) return;
+
       const val = newVal === 'true' ? true : newVal === 'false' ? false : newVal;
 
       this.configArr[idx].value = val;
@@ -183,11 +220,11 @@ export default {
 <template>
   <div>
     <Banner
-      v-if="parseError"
+      v-for="(errorMsg, index) in allErrors"
+      :key="index"
       color="error"
-      class="mb-20"
     >
-      {{ parseError }}
+      {{ errorMsg }}
     </Banner>
     <InfoBox
       v-for="(driver, idx) in configArr"

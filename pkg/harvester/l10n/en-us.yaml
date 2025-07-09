@@ -1102,6 +1102,7 @@ harvester:
       provisioner: Provisioner
       value: Value
       invalidJsonFormat: "Configuration value is not a valid JSON format: {error}"
+      failedToLoadDrivers: "Failed to load CSI drivers. Error: {error}"
     containerdRegistry:
       mirrors:
         mirrors: Mirrors
