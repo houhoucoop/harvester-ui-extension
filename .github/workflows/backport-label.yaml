@@ -1,15 +1,19 @@
-name: "[PR Management] Add Backport Label"
+name: "[PR Management] Add Labels"
 
 on:
   pull_request_target:
     types: [opened, reopened]
-    branches: [main]
+    branches:
+      - main
+      - 'release-harvester-v*'
 
 permissions:
   pull-requests: write
 
 jobs:
-  add-backport-label:
+  add-require-backport-label:
+    if: github.event.pull_request.draft == false &&
+        github.event.pull_request.base.ref == 'main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -52,7 +56,7 @@ jobs:
           pr_labels_csv=$(echo "$pr_labels" | tr '\n' ',' | sed 's/,$//')
           echo "pr_labels=$pr_labels_csv" >> "$GITHUB_OUTPUT"
 
-      - name: Add backport label if needed
+      - name: Add label if needed
         if: steps.fetch_info.outputs.should_label == 'true' && !contains(steps.fetch_info.outputs.pr_labels, steps.fetch_info.outputs.backport_label)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -61,3 +65,30 @@ jobs:
           gh pr edit ${{ github.event.pull_request.number }} \
             --repo ${{ github.repository }} \
             --add-label "${{ steps.fetch_info.outputs.backport_label }}"
+
+  add-backport-label:
+    if: github.event.pull_request.draft == false &&
+        startsWith(github.event.pull_request.base.ref, 'release-harvester-v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check conditions for backport label
+        id: check
+        run: |
+          IS_MERGIFY=$(echo '${{ github.event.pull_request.user.login }}' | grep -iq 'mergify' && echo true || echo false)
+          TARGET_BRANCH=${{ github.event.pull_request.base.ref }}
+
+          echo "IS_MERGIFY=$IS_MERGIFY" >> $GITHUB_OUTPUT
+          echo "TARGET_BRANCH=$TARGET_BRANCH" >> $GITHUB_OUTPUT
+
+      - name: Add label if needed
+        if: steps.check.outputs.IS_MERGIFY == 'true' && startsWith(steps.check.outputs.TARGET_BRANCH, 'release-harvester-v')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TARGET_BRANCH="${{ steps.check.outputs.TARGET_BRANCH }}"
+          version="${TARGET_BRANCH#release-harvester-v}"
+          label="backport/v${version}"
+          echo "Adding label $label"
+          gh pr edit ${{ github.event.pull_request.number }} \
+            --repo ${{ github.repository }} \
+            --add-label "$label"
