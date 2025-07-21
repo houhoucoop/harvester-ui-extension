@@ -197,6 +197,14 @@ export default {
 
       return v2DataEngine.value === 'true' ? DATA_ENGINE_V2 : DATA_ENGINE_V1;
     },
+
+    isCDISettingsFeatureEnabled() {
+      return this.$store.getters['harvester-common/getFeatureEnabled']('cdiSettings');
+    },
+
+    shouldShowCDISettingsTab() {
+      return this.isCDISettingsFeatureEnabled && this.longhornSystemVersion === DATA_ENGINE_V2;
+    }
   },
 
   watch: {
@@ -403,6 +411,14 @@ export default {
             </div>
           </template>
         </ArrayList>
+      </Tab>
+      <Tab
+        v-if="shouldShowCDISettingsTab"
+        name="cdiSettings"
+        :label="t('harvester.storage.cdiSettings.label')"
+        :weight="-2"
+      >
+        CDI Settings
       </Tab>
     </Tabbed>
   </CruResource>

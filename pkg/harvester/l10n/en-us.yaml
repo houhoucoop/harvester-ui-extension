@@ -1017,7 +1017,7 @@ harvester:
         progress: Restore in progress
         complete: Restore completed
 
-  subnet: 
+  subnet:
     cidrBlock:
       tooltip: The subnet range in CIDR notation. Note that the CIDR blocks of different Subnets' within the same VPC cannot overlap.
       label: CIDR Block
@@ -1068,8 +1068,6 @@ harvester:
         placeholder: e.g. 169.254.0.1/16
       remoteVpc:
         label: Remote VPC
-    
-   
   network:
     label: Virtual Machine Networks
     tabs:
@@ -1373,6 +1371,8 @@ harvester:
       label: Internal Storage Class
       cannotDeleteTooltip: Internal storage class volumes cannot be deleted
       cannotDeleteOrDefaultTooltip: Internal storage classes cannot be deleted or set as default
+    cdiSettings:
+      label: CDI Settings
 
   vlanConfig:
     title: Network Configuration
