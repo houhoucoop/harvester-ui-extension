@@ -1373,6 +1373,21 @@ harvester:
       cannotDeleteOrDefaultTooltip: Internal storage classes cannot be deleted or set as default
     cdiSettings:
       label: CDI Settings
+      volumeModeAndAccessMode:
+        label: Volume Mode / Access Mode
+        tooltip: Specifies the default volume mode and access modes.
+        add: Add
+        volumeMode: Volume Mode
+        accessMode: Access Mode
+      volumeSnapshotClass:
+        label: Volume Snapshot Class
+        tooltip: Sets the Volume Snapshot Class name to be used when taking snapshots of PVCs under this StorageClass.
+      cloneStrategy:
+        label: Clone Strategy
+        tooltip: Defines the clone strategy to use for volumes created with this StorageClass.
+      fileSystemOverhead:
+        label: File System Overhead
+        tooltip: Specifies the percentage of filesystem overhead to consider when calculating PVC size.
 
   vlanConfig:
     title: Network Configuration
