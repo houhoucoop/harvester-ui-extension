@@ -1378,16 +1378,21 @@ harvester:
         tooltip: Specifies the default volume mode and access modes.
         add: Add
         volumeMode: Volume Mode
-        accessMode: Access Mode
+        accessMode:
+          label: Access Mode
       volumeSnapshotClass:
         label: Volume Snapshot Class
         tooltip: Sets the Volume Snapshot Class name to be used when taking snapshots of PVCs under this StorageClass.
       cloneStrategy:
         label: Clone Strategy
         tooltip: Defines the clone strategy to use for volumes created with this StorageClass.
+        copy: Copy
+        snapshot: Snapshot
+        csiClone: CSI Clone
       fileSystemOverhead:
         label: File System Overhead
         tooltip: Specifies the percentage of filesystem overhead to consider when calculating PVC size.
+        placeholder: e.g. 0.05 (up to 3 decimal places, between 0 and 1)
 
   vlanConfig:
     title: Network Configuration

@@ -1,5 +1,5 @@
 <script>
-import { VOLUME_MODE } from '@pkg/harvester/config/types';
+import { HCI as HCI_ANNOTATIONS } from '@pkg/harvester/config/labels-annotations';
 import CreateEditView from '@shell/mixins/create-edit-view';
 import CruResource from '@shell/components/CruResource';
 import NameNsDescription from '@shell/components/form/NameNsDescription';
@@ -7,8 +7,7 @@ import ArrayList from '@shell/components/form/ArrayList';
 import Tab from '@shell/components/Tabbed/Tab';
 import Tabbed from '@shell/components/Tabbed';
 import { RadioGroup } from '@components/Form/Radio';
-import { Checkbox } from '@components/Form/Checkbox';
-import LabeledInput from '@components/Form/LabeledInput/LabeledInput.vue';
+import { LabeledInput } from '@components/Form/LabeledInput';
 import LabeledSelect from '@shell/components/form/LabeledSelect';
 import Loading from '@shell/components/Loading';
 import { _CREATE, _VIEW } from '@shell/config/query-params';
@@ -22,6 +21,7 @@ import { CSI_DRIVER } from '../../types';
 import Tags from '../../components/DiskTags';
 import { DATA_ENGINE_V1, DATA_ENGINE_V2 } from '../../models/harvester/persistentvolumeclaim';
 import { LVM_DRIVER } from '../../models/harvester/storage.k8s.io.storageclass';
+import CDISettings from './CDISettings';
 
 export const LVM_TOPOLOGY_LABEL = 'topology.lvm.csi/node';
 
@@ -45,7 +45,7 @@ export default {
     Tabbed,
     Loading,
     Tags,
-    Checkbox,
+    CDISettings,
   },
 
   mixins: [CreateEditView],
@@ -126,10 +126,10 @@ export default {
     const inStore = this.$store.getters['currentProduct'].inStore;
 
     const hash = {
-      namespaces:           this.$store.dispatch(`${ inStore }/findAll`, { type: NAMESPACE }),
-      storages:             this.$store.dispatch(`${ inStore }/findAll`, { type: STORAGE_CLASS }),
-      longhornNodes:        this.$store.dispatch(`${ inStore }/findAll`, { type: LONGHORN.NODES }),
-      csiDrivers:           this.$store.dispatch(`${ inStore }/findAll`, { type: CSI_DRIVER })
+      namespaces:    this.$store.dispatch(`${ inStore }/findAll`, { type: NAMESPACE }),
+      storages:      this.$store.dispatch(`${ inStore }/findAll`, { type: STORAGE_CLASS }),
+      longhornNodes: this.$store.dispatch(`${ inStore }/findAll`, { type: LONGHORN.NODES }),
+      csiDrivers:    this.$store.dispatch(`${ inStore }/findAll`, { type: CSI_DRIVER }),
     };
 
     if (this.value.longhornV2LVMSupport) {
@@ -205,11 +205,7 @@ export default {
     },
 
     shouldShowCDISettingsTab() {
-      return this.isCDISettingsFeatureEnabled && this.longhornSystemVersion === DATA_ENGINE_V2;
-    },
-
-    volumeModeOptions() {
-      return Object.values(VOLUME_MODE);
+      return this.isCDISettingsFeatureEnabled && this.provisioner !== `${ LONGHORN_DRIVER }_${ DATA_ENGINE_V1 }`;
     },
   },
 
@@ -263,6 +259,10 @@ export default {
       });
 
       this.formatAllowedTopoloties();
+
+      if (this.shouldShowCDISettingsTab) {
+        this.formatCDISettings();
+      }
     },
 
     formatAllowedTopoloties() {
@@ -284,6 +284,34 @@ export default {
       if (matchLabelExpressions.length > 0) {
         this.value.allowedTopologies = [{ matchLabelExpressions: [...matchLabelExpressions, ...lvmMatchExpression] }];
       }
+    },
+    formatCDISettings() {
+      const annotations = this.value.metadata.annotations || {};
+      const volumeModeAccessMode = {};
+
+      this.cdiSettings.volumeModeAccessMode.forEach((setting) => {
+        if (setting.volumeMode && Array.isArray(setting.accessModes) && setting.accessModes.length > 0) {
+          volumeModeAccessMode[setting.volumeMode] = setting.accessModes;
+        }
+      });
+
+      if (Object.keys(volumeModeAccessMode).length > 0) {
+        annotations[HCI_ANNOTATIONS.VOLUME_MODE_ACCESS_MODES] = JSON.stringify(volumeModeAccessMode);
+      }
+
+      if (this.cdiSettings.volumeSnapshotClass) {
+        annotations[HCI_ANNOTATIONS.VOLUME_SNAPSHOT_CLASS] = this.cdiSettings.volumeSnapshotClass;
+      }
+
+      if (this.cdiSettings.cloneStrategy) {
+        annotations[HCI_ANNOTATIONS.CLONE_STRATEGY] = this.cdiSettings.cloneStrategy;
+      }
+
+      if (this.cdiSettings.filesystemOverhead) {
+        annotations[HCI_ANNOTATIONS.FILESYSTEM_OVERHEAD] = this.cdiSettings.filesystemOverhead;
+      }
+
+      this.value.metadata.annotations = annotations;
     }
   }
 };
@@ -424,98 +452,12 @@ export default {
         :label="t('harvester.storage.cdiSettings.label')"
         :weight="-2"
       >
-        <ArrayList
-          v-model:value="cdiSettings"
-          :initial-empty-row="true"
-          :show-header="true"
+        <CDISettings
+          v-model:cdi-settings="cdiSettings"
+          :value="value"
           :mode="modeOverride"
-          :title="t('harvester.storage.cdiSettings.volumeModeAndAccessMode.label')"
-          :add-label="t('harvester.storage.cdiSettings.volumeModeAndAccessMode.add')"
-          :protip="t('harvester.storage.cdiSettings.volumeModeAndAccessMode.tooltip')"
-        >
-          <template #column-headers>
-            <div class="column-headers">
-              <div
-                class="row"
-                :class="{ 'create': isCreate }"
-              >
-                <label
-                  class="col span-3 value text-label mb-10"
-                  for="volumeMode"
-                >
-                  {{ t('harvester.storage.cdiSettings.volumeModeAndAccessMode.volumeMode') }}
-                </label>
-                <label
-                  class="col span-9 value text-label mb-10"
-                  for="accessMode"
-                >
-                  {{ t('harvester.storage.cdiSettings.volumeModeAndAccessMode.accessMode') }}
-                </label>
-              </div>
-            </div>
-          </template>
-          <template #columns="scope">
-            <div class="row">
-              <div class="col span-3">
-                <LabeledSelect
-                  id="volumeMode"
-                  :mode="modeOverride"
-                  :options="volumeModeOptions"
-                />
-              </div>
-              <div
-                id="accessMode"
-                class="col span-9"
-              >
-                <Checkbox
-                  v-model:value="scope.row.value.values"
-                  class="check"
-                  type="checkbox"
-                  :label="'ReadWriteOnce'"
-                  :mode="modeOverride"
-                />
-                <Checkbox
-                  v-model:value="scope.row.value.values"
-                  class="check"
-                  type="checkbox"
-                  :label="'ReadOnlyMany'"
-                  :mode="modeOverride"
-                />
-                <Checkbox
-                  v-model:value="scope.row.value.values"
-                  class="check"
-                  type="checkbox"
-                  :label="'ReadWriteMany'"
-                  :mode="modeOverride"
-                />
-                <Checkbox
-                  v-model:value="scope.row.value.values"
-                  class="check"
-                  type="checkbox"
-                  :label="'ReadWriteOncePod'"
-                  :mode="modeOverride"
-                />
-              </div>
-            </div>
-          </template>
-        </ArrayList>
-        <LabeledSelect
-          class="select mt-20 mb-20"
-          :label="t('harvester.storage.cdiSettings.volumeSnapshotClass.label')"
-          :tooltip="t('harvester.storage.cdiSettings.volumeSnapshotClass.tooltip')"
-          :mode="modeOverride"
-        />
-        <LabeledSelect
-          class="select mb-20"
-          :label="t('harvester.storage.cdiSettings.cloneStrategy.label')"
-          :tooltip="t('harvester.storage.cdiSettings.cloneStrategy.tooltip')"
-          :mode="modeOverride"
-        />
-        <LabeledInput
-          class="select mb-20"
-          :label="t('harvester.storage.cdiSettings.fileSystemOverhead.label')"
-          :tooltip="t('harvester.storage.cdiSettings.fileSystemOverhead.tooltip')"
-          :mode="modeOverride"
+          :provisioner="value.provisioner"
+          :is-create="isCreate"
         />
       </Tab>
     </Tabbed>
@@ -523,15 +465,7 @@ export default {
 </template>
 
 <style lang="scss" scoped>
-  .column-headers .row.create {
-    max-width: calc(100% - 75px);
-  }
-
-  .row {
+  .custom-headers {
     align-items: center;
-  }
-
-  .select {
-    max-width: 480px;
   }
 </style>
