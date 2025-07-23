@@ -1373,13 +1373,13 @@ harvester:
       cannotDeleteOrDefaultTooltip: Internal storage classes cannot be deleted or set as default
     cdiSettings:
       label: CDI Settings
-      volumeModeAndAccessMode:
-        label: Volume Mode / Access Mode
+      volumeModeAccessModes:
+        label: Volume Mode / Access Modes
         tooltip: Specifies the default volume mode and access modes.
         add: Add
         volumeMode: Volume Mode
-        accessMode:
-          label: Access Mode
+        accessModes:
+          label: Access Modes
       volumeSnapshotClass:
         label: Volume Snapshot Class
         tooltip: Sets the Volume Snapshot Class name to be used when taking snapshots of PVCs under this StorageClass.

@@ -287,16 +287,16 @@ export default {
     },
     formatCDISettings() {
       const annotations = this.value.metadata.annotations || {};
-      const volumeModeAccessMode = {};
+      const volumeModeAccessModes = {};
 
-      this.cdiSettings.volumeModeAccessMode.forEach((setting) => {
+      this.cdiSettings.volumeModeAccessModes.forEach((setting) => {
         if (setting.volumeMode && Array.isArray(setting.accessModes) && setting.accessModes.length > 0) {
-          volumeModeAccessMode[setting.volumeMode] = setting.accessModes;
+          volumeModeAccessModes[setting.volumeMode] = setting.accessModes;
         }
       });
 
-      if (Object.keys(volumeModeAccessMode).length > 0) {
-        annotations[HCI_ANNOTATIONS.VOLUME_MODE_ACCESS_MODES] = JSON.stringify(volumeModeAccessMode);
+      if (Object.keys(volumeModeAccessModes).length > 0) {
+        annotations[HCI_ANNOTATIONS.VOLUME_MODE_ACCESS_MODES] = JSON.stringify(volumeModeAccessModes);
       }
 
       if (this.cdiSettings.volumeSnapshotClass) {

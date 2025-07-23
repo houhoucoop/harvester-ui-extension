@@ -52,10 +52,10 @@ export default {
   data() {
     return {
       cdiSettings: {
-        volumeModeAccessMode: [],
-        volumeSnapshotClass:  null,
-        cloneStrategy:        null,
-        filesystemOverhead:   null,
+        volumeModeAccessModes: [],
+        volumeSnapshotClass:   null,
+        cloneStrategy:         null,
+        filesystemOverhead:    null,
       },
       defaultAddValue: { volumeMode: null, accessModes: [] },
       noneOption:      { label: 'None', value: null },
@@ -149,24 +149,24 @@ export default {
     initCDISettingsFromAnnotations() {
       const annotations = this.value?.metadata?.annotations || {};
 
-      let volumeModeAccessMode = [];
+      let volumeModeAccessModes = [];
       const rawVolumeMode = annotations[HCI_ANNOTATIONS.VOLUME_MODE_ACCESS_MODES];
 
       if (rawVolumeMode) {
         try {
           const parsed = JSON.parse(rawVolumeMode);
 
-          volumeModeAccessMode = Object.entries(parsed).map(([volumeMode, accessModes]) => ({
+          volumeModeAccessModes = Object.entries(parsed).map(([volumeMode, accessModes]) => ({
             volumeMode,
             accessModes: Array.isArray(accessModes) ? accessModes : [],
           }));
         } catch (e) {
-          console.error('Failed to parse volume mode/access mode annotation:', e); // eslint-disable-line no-console
+          console.error('Failed to parse annotation:', e); // eslint-disable-line no-console
         }
       }
 
-      if (volumeModeAccessMode.length) {
-        this.cdiSettings.volumeModeAccessMode = volumeModeAccessMode;
+      if (volumeModeAccessModes.length) {
+        this.cdiSettings.volumeModeAccessModes = volumeModeAccessModes;
       }
       if (annotations[HCI_ANNOTATIONS.VOLUME_SNAPSHOT_CLASS]) {
         this.cdiSettings.volumeSnapshotClass = annotations[HCI_ANNOTATIONS.VOLUME_SNAPSHOT_CLASS];
@@ -180,7 +180,7 @@ export default {
     },
 
     resetCdiSettings() {
-      this.cdiSettings.volumeModeAccessMode = [this.defaultAddValue];
+      this.cdiSettings.volumeModeAccessModes = [this.defaultAddValue];
       this.cdiSettings.volumeSnapshotClass = null;
       this.cdiSettings.cloneStrategy = null;
       this.cdiSettings.filesystemOverhead = null;
@@ -197,14 +197,14 @@ export default {
 
 <template>
   <ArrayList
-    v-model:value="cdiSettings.volumeModeAccessMode"
+    v-model:value="cdiSettings.volumeModeAccessModes"
     :initial-empty-row="true"
     :show-header="true"
     :mode="mode"
-    :title="t('harvester.storage.cdiSettings.volumeModeAndAccessMode.label')"
-    :add-label="t('harvester.storage.cdiSettings.volumeModeAndAccessMode.add')"
+    :title="t('harvester.storage.cdiSettings.volumeModeAccessModes.label')"
+    :add-label="t('harvester.storage.cdiSettings.volumeModeAccessModes.add')"
     :default-add-value="defaultAddValue"
-    :protip="t('harvester.storage.cdiSettings.volumeModeAndAccessMode.tooltip')"
+    :protip="t('harvester.storage.cdiSettings.volumeModeAccessModes.tooltip')"
   >
     <template #column-headers>
       <div class="column-headers">
@@ -216,13 +216,13 @@ export default {
             class="col span-3 value text-label mb-10"
             for="volumeMode"
           >
-            {{ t('harvester.storage.cdiSettings.volumeModeAndAccessMode.volumeMode') }}
+            {{ t('harvester.storage.cdiSettings.volumeModeAccessModes.volumeMode') }}
           </label>
           <label
             class="col span-9 value text-label mb-10"
-            for="accessMode"
+            for="accessModes"
           >
-            {{ t('harvester.storage.cdiSettings.volumeModeAndAccessMode.accessMode.label') }}
+            {{ t('harvester.storage.cdiSettings.volumeModeAccessModes.accessModes.label') }}
           </label>
         </div>
       </div>
@@ -239,7 +239,7 @@ export default {
           />
         </div>
         <div
-          id="accessMode"
+          id="accessModes"
           class="col span-9"
         >
           <Checkbox
