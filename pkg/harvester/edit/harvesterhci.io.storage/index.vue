@@ -457,7 +457,6 @@ export default {
           :value="value"
           :mode="mode"
           :provisioner="value.provisioner"
-          :is-create="isCreate"
         />
       </Tab>
     </Tabbed>

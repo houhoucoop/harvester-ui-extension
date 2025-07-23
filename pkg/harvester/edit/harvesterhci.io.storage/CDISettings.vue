@@ -8,6 +8,7 @@ import LabeledSelect from '@shell/components/form/LabeledSelect';
 import { VOLUME_SNAPSHOT_CLASS, HCI } from '../../types';
 import { HCI_SETTING } from '../../config/settings';
 import { allHash } from '@shell/utils/promise';
+import { _EDIT, _CREATE } from '@shell/config/query-params';
 
 export default {
   name: 'CDISettings',
@@ -25,10 +26,6 @@ export default {
       type:     String,
       required: true
     },
-    isCreate:    {
-      type:    Boolean,
-      default: false
-    }
   },
 
   components: {
@@ -63,7 +60,7 @@ export default {
   },
 
   created() {
-    if (this.isCreate) {
+    if (this.mode === _CREATE ) {
       this.setDefaultVolumeSnapshotClass();
     } else {
       this.initCDISettingsFromAnnotations();
@@ -111,6 +108,10 @@ export default {
       const regex = /^(0(\.\d{1,3})?|1(\.0{1,3})?)$/;
 
       return regex.test(val);
+    },
+
+    isCustomClass() {
+      return this.mode === _CREATE || this.mode === _EDIT;
     }
   },
 
@@ -210,7 +211,7 @@ export default {
       <div class="column-headers">
         <div
           class="row"
-          :class="{ create: isCreate }"
+          :class="{ custom: isCustomClass }"
         >
           <label
             class="col span-3 value text-label mb-10"
@@ -291,7 +292,7 @@ export default {
 </template>
 
 <style scoped lang="scss">
-  .column-headers .row.create {
+  .column-headers .row.custom {
     max-width: calc(100% - 75px);
   }
 
