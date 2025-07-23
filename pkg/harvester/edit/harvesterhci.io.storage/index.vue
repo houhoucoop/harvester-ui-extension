@@ -455,7 +455,7 @@ export default {
         <CDISettings
           v-model:cdi-settings="cdiSettings"
           :value="value"
-          :mode="modeOverride"
+          :mode="mode"
           :provisioner="value.provisioner"
           :is-create="isCreate"
         />
