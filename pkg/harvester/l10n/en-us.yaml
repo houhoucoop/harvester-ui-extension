@@ -1124,6 +1124,9 @@ harvester:
       publicCertificate: Public Certificate
       privateKey: Private Key
       ca: CA
+    rancherCluster:
+      kubeConfig: Rancher KubeConfig
+      removeUpstreamClusterWhenNamespaceIsDeleted: Remove Upstream Cluster When Namespace Is Deleted
     storageNetwork:
       range:
         placeholder: e.g. 172.16.0.0/24
@@ -1728,6 +1731,7 @@ advancedSettings:
     'harv-additional-guest-memory-overhead-ratio': 'The ratio for kubevirt to adjust the VM overhead memory. The value could be zero, empty value or floating number between 1.0 and 10.0, default to 1.5.'
     'harv-upgrade-config': 'Configure image preloading and VM restore options for upgrades. See related fields in <a href="{url}" target="_blank" rel="noopener">settings/upgrade-config</a>'
     'harv-vm-migration-network': 'Segregated network for VM migration traffic.'
+    'harv-rancher-cluster': 'Configure Rancher cluster integration settings for guest cluster management.'
 
 typeLabel:
   kubevirt.io.virtualmachine: |-
