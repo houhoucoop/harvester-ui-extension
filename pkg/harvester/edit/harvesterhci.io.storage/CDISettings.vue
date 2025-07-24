@@ -55,7 +55,7 @@ export default {
         filesystemOverhead:    null,
       },
       defaultAddValue: { volumeMode: null, accessModes: [] },
-      noneOption:      { label: 'None', value: null },
+      noneOption:      { label: 'None', value: '' },
     };
   },
 
@@ -72,8 +72,22 @@ export default {
       return this.$store.getters['currentProduct'].inStore;
     },
 
+    allVolumeModeOptions() {
+      return Object.values(VOLUME_MODE).map((mode) => ({ label: mode, value: mode }));
+    },
+
+    selectedVolumeModes() {
+      return this.cdiSettings.volumeModeAccessModes
+        .map((item) => item.volumeMode)
+        .filter(Boolean);
+    },
+
     volumeModeOptions() {
-      return [this.noneOption, ...Object.values(VOLUME_MODE).map((mode) => ({ label: mode, value: mode }))];
+      return [this.noneOption, ...this.allVolumeModeOptions].filter( (option) => !this.selectedVolumeModes.includes(option.value) );
+    },
+
+    allVolumeModesSelected() {
+      return this.selectedVolumeModes.length === this.allVolumeModeOptions.length;
     },
 
     accessModeOptions() {
@@ -206,6 +220,7 @@ export default {
     :add-label="t('harvester.storage.cdiSettings.volumeModeAccessModes.add')"
     :default-add-value="defaultAddValue"
     :protip="t('harvester.storage.cdiSettings.volumeModeAccessModes.tooltip')"
+    :add-disabled="allVolumeModesSelected"
   >
     <template #column-headers>
       <div class="column-headers">
