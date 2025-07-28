@@ -20,6 +20,7 @@ export const OFF = 'Off';
 const VMI_WAITING_MESSAGE =
   'The virtual machine is waiting for resources to become available.';
 const VM_ERROR = 'VM error';
+const STARTING = 'Starting';
 const STOPPING = 'Stopping';
 const UNSCHEDULABLE = 'Unschedulable';
 const WAITING = 'Waiting';
@@ -99,6 +100,11 @@ export default class VirtVm extends HarvesterResource {
       if (clone) {
         clone.action = 'goToCloneVM';
       }
+    }
+
+    // disable edit when the VM is in a starting or stopping state
+    if (this.stateDisplay === STARTING || this.stateDisplay === STOPPING) {
+      out = out.filter((action) => action.action !== 'goToEdit');
     }
 
     return [
@@ -563,7 +569,7 @@ export default class VirtVm extends HarvesterResource {
           return true;
         }
 
-        return ['Starting', 'Running'].includes(this.status?.printableStatus);
+        return [STARTING, 'Running'].includes(this.status?.printableStatus);
       case RunStrategy.Manual:
       default:
         changeRequests = new Set(
@@ -580,7 +586,7 @@ export default class VirtVm extends HarvesterResource {
         }
 
         if (changeRequests.size === 0) {
-          return ['Starting', 'Running'].includes(
+          return [STARTING, 'Running'].includes(
             this.status?.printableStatus
           );
         }
@@ -760,7 +766,7 @@ export default class VirtVm extends HarvesterResource {
         if (!POD_STATUS_ALL_READY.includes(podStatus?.status)) {
           return {
             ...podStatus,
-            status:          'Starting',
+            status:          STARTING,
             message:         STARTING_MESSAGE,
             detailedMessage: podStatus?.message,
             pod:             this.podResource
@@ -769,7 +775,7 @@ export default class VirtVm extends HarvesterResource {
       }
 
       return {
-        status:  'Starting',
+        status:  STARTING,
         message: STARTING_MESSAGE,
         pod:     this.podResource
       };
@@ -802,7 +808,7 @@ export default class VirtVm extends HarvesterResource {
       [VMIPhase.Scheduling, VMIPhase.Scheduled].includes(
         this.vmi?.status?.phase
       ) && {
-      status:  'Starting',
+      status:  STARTING,
       message: STARTING_MESSAGE
     }) ||
       (this.vmi &&
@@ -1026,10 +1032,10 @@ export default class VirtVm extends HarvesterResource {
       if (status === VM_ERROR) {
         errorCount += 1;
       } else if (
-        status === 'Stopping' ||
+        status === STOPPING ||
         status === 'Waiting' ||
         status === 'Pending' ||
-        status === 'Starting' ||
+        status === STARTING ||
         status === 'Terminating'
       ) {
         warningCount += 1;
